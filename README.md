@@ -35,6 +35,9 @@ Install requirements:
 
 `pip install -r requirements.txt`
 
+Install nmap (kali linux already installed)
+`sudo apt-get install nmap`
+
 
 If finished run the main.py file
 
