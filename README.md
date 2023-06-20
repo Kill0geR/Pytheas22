@@ -35,9 +35,11 @@ Install requirements:
 
 `pip install -r requirements.txt`
 
-Install nmap (kali linux already installed)
+Install nmap (kali linux has it already installed)
 `sudo apt-get install nmap`
 
+Install nslookup (kali linux has it already installed)
+`sudo apt install dnsutils`
 
 If finished run the main.py file
 
