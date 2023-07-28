@@ -3,6 +3,7 @@ import subprocess
 
 
 def check_ports(open_port, ip):
+    data = ""
     all_port_data = {20: "File Transfer Protocol (FTP) data transfer",
                      21: "File Transfer Protocol (FTP) control (command)",
                      22: f"Secure Shell (SSH) secure logins, file transfers (scp, sftp) and port forwarding. \n To Bruteforce the target set ssh_bruteforce Parameter to True",
@@ -34,8 +35,8 @@ def check_ports(open_port, ip):
                      9080: "Microsoft Groove Software",
                      9999: "Communication",
                      62078: "Lightning Connector Apple Device"}
+
     if open_port in all_port_data:
-        global data
         data = all_port_data[open_port]
         if open_port == 53:
             if re.findall(r"\d+.\d+.\d+.\d+", ip):
@@ -52,8 +53,7 @@ def check_ports(open_port, ip):
                 lst_name[0] = ""
                 name = "".join(lst_name)
                 data += f"\nThis is the website: '{name}' of this IP"
-
     else:
-        data = f"UNKNOWN PORT\n WEBSITE MIGHT BE OPEN ON: http://{ip}:{open_port}"
+        data += f"There might be a website: http://{ip}:{open_port}"
 
     return data
