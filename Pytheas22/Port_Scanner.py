@@ -18,6 +18,7 @@ from logging import NullHandler
 from paramiko import SSHClient, AutoAddPolicy, AuthenticationException, ssh_exception
 import sys
 import csv
+import ipaddress
 
 string_port = """
 
@@ -62,6 +63,7 @@ class PortScanner:
     every_ip_with_name = []
     my_ip_address = None
     check_open_port = []
+    hostnames = {}
 
     def __init__(self):
         self.headers = None
@@ -244,9 +246,21 @@ class PortScanner:
                     continue
         return lst_everything
 
-    def get_name(self, mac_address):
+    def validate_ip(self, ip, hostname):
+        try:
+            check_ip = ipaddress.ip_address(hostname)
+
+        except:
+            self.hostnames[ip] = hostname
+
+    def get_name(self, ip, mac_address):
+        self.hostname = None
+
         data = requests.get(f"https://maclookup.app/search/result?mac={mac_address}")
         split_data = data.text.split("\n")
+
+        if ip in self.hostnames:
+            self.hostname = self.hostnames[ip]
 
         if "No assignment is found for this MAC" not in data.text:
             get_action = [every_action for every_action in split_data if
@@ -255,13 +269,24 @@ class PortScanner:
             second = get_name[1]
             this_name = second.split("<")
             real_name = this_name[0].replace(">", "")
-            return real_name
+            if self.hostname is not None:
+                return f"{real_name} (hostname: {self.hostname})"
+            else:
+                return real_name
 
         else:
-            return "Unknown"
+            if self.hostname is not None:
+                return f"Unknown (hostname: {self.hostname})"
+            else:
+                return "Unknown"
+
+
 
     def pinging(self, ip):
-        ping = subprocess.run(["ping", ip, "-n", "1", "-w", "1000"], capture_output=True)
+        ping = subprocess.run(["ping", "-a", ip, "-n", "1", "-w", "1000"], capture_output=True).stdout
+        get_hostname = ping.split()[4].decode()
+        validate = PortScanner()
+        validate.validate_ip(ip, get_hostname)
 
     def internal_windows(self):
         cmd = subprocess.run(["ipconfig", "/all"], capture_output=True)
@@ -300,7 +325,8 @@ class PortScanner:
                     if mac_ip != "ff-ff-ff-ff-ff-ff":
                         indexes.append((arp_ip, mac_ip))
 
-        ip_name = [(ip, PortScanner.get_name(PortScanner, mac)) for ip, mac in indexes]
+        get_mac = PortScanner()
+        ip_name = [(ip, get_mac.get_name(ip, mac)) for ip, mac in indexes]
         return ip_name
 
     @staticmethod
@@ -358,7 +384,12 @@ class PortScanner:
             if every_ip[0] == PortScanner.my_ip_address:
                 ip_name = "MY IP-ADDRESS"
 
-            bp.color(f"[{number + 1}]: {every_ip[0]}          {ip_name}", PortScanner.random_color)
+            printing = f"[{number + 1}]: {every_ip[0]}          "
+            amount_spaces = 32 - len(printing)
+            spaces = f"".join([" " for k in range(amount_spaces)])
+            printing += spaces
+
+            bp.color(f"{printing}{ip_name}", PortScanner.random_color)
             just_ips.append(every_ip[0])
 
         while True:
