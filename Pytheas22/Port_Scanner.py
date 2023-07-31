@@ -22,7 +22,7 @@ import ipaddress
 
 string_port = """
 
-
+                                                                                           
         ***** **                               *                                           
      ******  ****                      *     **                                            
     **   *  *  ***                    **     **                                            
@@ -42,7 +42,7 @@ string_port = """
  ***    *            ********  **                  *                                   e e 
   ******            *      ****                   *                                    r r 
     ***                                          *                                     2 2 
-
+                                                                                           
 
 
 
@@ -63,6 +63,7 @@ class PortScanner:
     every_ip_with_name = []
     my_ip_address = None
     check_open_port = []
+    open_ports = []
     hostnames = {}
 
     def __init__(self):
@@ -254,34 +255,33 @@ class PortScanner:
             self.hostnames[ip] = hostname
 
     def get_name(self, ip, mac_address):
-        if re.match(r'(?:[0-9a-fA-F]-?){12}', mac_address):
-            self.hostname = None
+        self.hostname = None
 
-            data = requests.get(f"https://maclookup.app/search/result?mac={mac_address}")
-            split_data = data.text.split("\n")
+        data = requests.get(f"https://maclookup.app/search/result?mac={mac_address}")
+        split_data = data.text.split("\n")
 
-            if ip in self.hostnames:
-                self.hostname = self.hostnames[ip]
+        if ip in self.hostnames:
+            self.hostname = self.hostnames[ip]
 
-            if "No assignment is found for this MAC" not in data.text:
-                get_action = [every_action for every_action in split_data if
-                              '<div class="col-md-12" style="padding-bottom: 1em">' in every_action]
-                get_name = get_action[0].split("h2")
-                second = get_name[1]
-                this_name = second.split("<")
-                real_name = this_name[0].replace(">", "")
-                if self.hostname is not None:
-                    return f"{real_name} (hostname: {self.hostname})"
-                else:
-                    return real_name
-
+        if "No assignment is found for this MAC" not in data.text:
+            get_action = [every_action for every_action in split_data if
+                          '<div class="col-md-12" style="padding-bottom: 1em">' in every_action]
+            get_name = get_action[0].split("h2")
+            second = get_name[1]
+            this_name = second.split("<")
+            real_name = this_name[0].replace(">", "")
+            if self.hostname is not None:
+                return f"{real_name} (hostname: {self.hostname})"
             else:
-                if self.hostname is not None:
-                    return f"Unknown (hostname: {self.hostname})"
-                else:
-                    return "Unknown"
+                return real_name
+
         else:
-            pass
+            if self.hostname is not None:
+                return f"Unknown (hostname: {self.hostname})"
+            else:
+                return "Unknown"
+
+
 
     def pinging(self, ip):
         ping = subprocess.run(["ping", "-a", ip, "-n", "1", "-w", "1000"], capture_output=True).stdout
@@ -303,8 +303,7 @@ class PortScanner:
         for every_ip in all_ips:
             try:
                 socket.inet_aton(every_ip)
-                if every_ip.split(".")[-1] not in ["1", "255"]:
-                    valid_ip.append(every_ip)
+                valid_ip.append(every_ip)
             except socket.error:
                 continue
 
@@ -312,7 +311,7 @@ class PortScanner:
         getlast = PortScanner.my_ip_address.split(".")
         spalten = [f"{'.'.join(getlast[0:3])}.{block_number}" for block_number in range(1, 255)]
         for all_ip in spalten:
-            t = threading.Thread(target=PortScanner.pinging, args=(PortScanner, all_ip,))
+            t = threading.Thread(target=PortScanner.pinging, args=(PortScanner,all_ip,))
             t.start()
 
         time.sleep(1)
@@ -361,8 +360,7 @@ class PortScanner:
 
             if others:
                 for not_in_lst in others:
-                    PortScanner.every_ip_with_name.append(
-                        (not_in_lst[1].replace("(", "").replace(")", ""), not_in_lst[0]))
+                    PortScanner.every_ip_with_name.append((not_in_lst[1].replace("(", "").replace(")", ""), not_in_lst[0]))
 
         elif sys.platform == "win32" or sys.platform == "windows" or sys.platform == "win64":
             win_threading_wait = threading.Thread(target=PortScanner.wait)
@@ -407,14 +405,17 @@ class PortScanner:
                     counter = bp.color(f"\nScanning {idx + 1} of {len(all_intern_ip)}\n".upper(),
                                        PortScanner.random_color, False)
                     print(counter, end="")
-                    PortScanner.start_scanning(PortScanner, PortScanner.well_known_ports, every_port, print_text=False,
-                                               ssh=True, scan_internal_ip=True)
+                    PortScanner.start_scanning(PortScanner, PortScanner.well_known_ports, every_port, print_text=False, ssh=True, scan_internal_ip=True,  scanning_all_local_networks=True)
+                    time.sleep(0.5)
 
                 if PortScanner.ssh_port:
-                    PortScanner.hack_ip_ssh(PortScanner, PortScanner.ssh_port)
+                    PortScanner.hack_ip_ssh(PortScanner,PortScanner.ssh_port)
 
-                bp.color("All open ports in your network has been saved to 'Internal_Network.db'",
-                         PortScanner.random_color)
+                if "Internal_Network.db" in os.listdir():
+                    bp.color("All open ports in your network has been saved to 'Internal_Network.db'", PortScanner.random_color)
+                else:
+                    bp.color("No IP'Address has an open port", PortScanner.random_color)
+
                 quit()
 
         while True:
@@ -444,15 +445,12 @@ class PortScanner:
         try:
             ssh_client.connect(host, port=22, username=username, password=password, banner_timeout=300)
             with open("credentials_found.txt", "a") as file:
-                bp.color(f"Username - {username} and Password - {password} found for {host}!!!!1",
-                         PortScanner.random_color)
-                file.write(
-                    f"\nUsername: {username}\nPassword: {password}\nWorked on host {host}\nTime: {time.strftime('%H:%M: - %d.%m.%y')}")
+                bp.color(f"Username - {username} and Password - {password} found for {host}!!!!1", PortScanner.random_color)
+                file.write(f"\nUsername: {username}\nPassword: {password}\nWorked on host {host}\nTime: {time.strftime('%H:%M: - %d.%m.%y')}")
                 bp.color("CHECK 'credentials_found.txt' TO SEE YOUR PASSWORD", PortScanner.random_color)
                 time.sleep(1)
         except AuthenticationException:
-            bp.color(f"Username - {username} and Password - {password} is Incorrect for {host}",
-                     PortScanner.random_color)
+            bp.color(f"Username - {username} and Password - {password} is Incorrect for {host}", PortScanner.random_color)
         except ssh_exception.SSHException:
             bp.color("**** Attempting to connect - Rate limiting on server ****", PortScanner.random_color)
 
@@ -479,9 +477,7 @@ class PortScanner:
                         csv_reader = csv.reader(file, delimiter=",")
                         all_passwords.extend(csv_reader)
                 except FileNotFoundError:
-                    bp.color(
-                        f"'passwords.csv' could not be found. Download the file on my github: https://github.com/Kill0geR/Pytheas22",
-                        PortScanner.random_color)
+                    bp.color(f"'passwords.csv' could not be found. Download the file on my github: https://github.com/Kill0geR/Pytheas22", PortScanner.random_color)
                     quit()
 
                 for host in ssh_lst:
@@ -492,9 +488,41 @@ class PortScanner:
 
                 break
 
-    def start_scanning(self, port_lst, this_ip, print_text=True, country=None, ssh=False, scan_internal_ip=False):
+    def tcp_connect(self,this_ip, port, print_text):
+        bp.color(f"SCANNING PORT: {port}", PortScanner.random_color)
+        try:
+            start = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            start.settimeout(1)
+            try:
+                start.connect((this_ip, port))
+                self.open_ports.append(port)
+                self.check_open_port.append(port)
+                time.sleep(0.5)
+                if port == 22: self.ssh_port.append(this_ip)
+
+            except TimeoutError:
+                pass
+
+            except socket.gaierror:
+                if not PortScanner.is_web:
+                    if print_text:
+                        bp.color("THIS IP IS NOT AVAILABLE", PortScanner.random_color)
+                else:
+                    if print_text:
+                        bp.color(f"WEBSITE: {this_ip} IS NOT AVAILABLE", PortScanner.random_color)
+                quit()
+
+            except KeyboardInterrupt:
+                quit()
+
+            except:
+                pass
+        except ConnectionRefusedError:
+            pass
+
+
+    def start_scanning(self, port_lst, this_ip, print_text=True, country=None, ssh=False, scan_internal_ip=False, scanning_all_local_networks=False):
         original = this_ip
-        open_ports = []
         if "http" in this_ip:
             this_ip = this_ip.split("/")[2]
             if ":" in this_ip:
@@ -508,41 +536,24 @@ class PortScanner:
                              PortScanner.random_color)
                     quit()
         print()
-        if "http" in original:
-            bp.color(f"Scanning the website: ".upper() + f'{original}\n', PortScanner.random_color)
-        else:
-            bp.color(f"Scanning the ip-address: '{original}'\n".upper(), PortScanner.random_color)
+        if "http" in original: bp.color(f"Scanning the website: ".upper()+f'{original}\n', PortScanner.random_color)
+        else: bp.color(f"Scanning the ip-address: '{original}'\n".upper(), PortScanner.random_color)
 
+        start_time = time.perf_counter()
+        threads = []
         for port in port_lst:
-            bp.color(f"SCANNING PORT: {port}", PortScanner.random_color)
-            try:
-                start = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                start.settimeout(0.5)
-                try:
-                    start.connect((this_ip, port))
-                    open_ports.append(port)
-                    self.check_open_port.append(port)
-                    if port == 22: self.ssh_port.append(this_ip)
+            connect = PortScanner()
+            t = threading.Thread(target=connect.tcp_connect, args=(this_ip, port, print_text))
+            threads.append(t)
 
-                except TimeoutError:
-                    continue
+        for thread in threads:
+            thread.start()
 
-                except socket.gaierror:
-                    if not PortScanner.is_web:
-                        if print_text:
-                            bp.color("THIS IP IS NOT AVAILABLE", PortScanner.random_color)
-                    else:
-                        if print_text:
-                            bp.color(f"WEBSITE: {this_ip} IS NOT AVAILABLE", PortScanner.random_color)
-                    quit()
+        for thread in threads:
+            thread.join()
 
-                except KeyboardInterrupt:
-                    quit()
-
-                except:
-                    pass
-            except ConnectionRefusedError:
-                pass
+        end = time.perf_counter()
+        print(f"IT TOOK AROUND {round(end - start_time, 2)} SECONDS TO FINISH SCANNING PORTS")
 
         if PortScanner.is_web:
             output = subprocess.run(["nslookup", this_ip], capture_output=True)
@@ -561,16 +572,15 @@ class PortScanner:
                         f"[{idx + 1}] {each_addr} is one of the addresses of {this_ip}", PortScanner.random_color)
 
         print()
-        if open_ports:
+        if self.open_ports:
             if print_text:
-                this_lst = [
-                    bp.color(f"{this_ip} has port {each_port} opened | {port_data.check_ports(each_port, this_ip)}",
-                             PortScanner.random_color, False) for
-                    each_port in open_ports]
+                this_lst = [bp.color(f"{this_ip} has port {each_port} opened | {port_data.check_ports(each_port, this_ip)}", PortScanner.random_color, False) for
+                            each_port in self.open_ports]
                 bp.ui.list(this_lst, f"ALL OPEN PORTS FOR {this_ip}")
 
             if country is not None:
-                PortScanner.add_to_db(self.country_name, this_ip, "".join(str(open_ports)), name=country)
+                PortScanner.add_to_db(self.country_name, this_ip, "".join(str(self.open_ports)), name=country)
+                self.open_ports = []
 
             if self.ssh_port and country is None and ssh is True and scan_internal_ip is False:
                 PortScanner.hack_ip_ssh(PortScanner, self.ssh_port)
@@ -579,18 +589,17 @@ class PortScanner:
                 print("SET ssh_bruteforce to True")
 
             if scan_internal_ip:
-                PortScanner.add_to_db_intern(this_ip, "".join(str(open_ports)))
+                PortScanner.add_to_db_intern(this_ip, "".join(str(self.open_ports)))
+                self.open_ports = []
 
         else:
             if print_text:
                 if 62078 not in port_lst:
-                    bp.color(f"\nThis IP-Address: {this_ip} has no ports open from {port_lst[0]}-{port_lst[-1]}",
-                             PortScanner.random_color)
-                else:
-                    bp.color(f"\nThis IP-Address: {this_ip} has no ports open from all wellknown ports",
-                             PortScanner.random_color)
+                    bp.color(f"\nThis IP-Address: {this_ip} has no ports open from {port_lst[0]}-{port_lst[-1]}", PortScanner.random_color)
+                else: bp.color(f"\nThis IP-Address: {this_ip} has no ports open from all wellknown ports", PortScanner.random_color)
         if print_text and not self.ssh_port:
             bp.color("\nTHANK YOU FOR USING PYTHEAS22", PortScanner.random_color)
+
 
     def ip_cameras(self, port_lst=None, ssh=False):
         colorama.init()
@@ -637,14 +646,11 @@ class PortScanner:
                 bp.color(f"\nGetting all the ip-cameras of {hacked_country}\n".upper(),
                          PortScanner.random_color)
                 get_all_ports = PortScanner.counter(self, answer.upper())
-                bp.color(f"\n'{hacked_country}_hacked_IP_CAMERAS' HAS BEEN MADE ALL DATA WILL BE STORED IN THERE",
-                         PortScanner.random_color)
+                bp.color(f"\n'{hacked_country}_hacked_IP_CAMERAS' HAS BEEN MADE ALL DATA WILL BE STORED IN THERE", PortScanner.random_color)
                 bp.color(
                     f"ALL IP-CAMERAS WITH THEIR LINK HAS BEEN SAVED IN '{hacked_country}_IP-Cameras.txt'",
                     PortScanner.random_color)
-                bp.color(
-                    f"EVERY OPEN PORT OF THE IP-CAMERAS IN {hacked_country} WILL BE SAVED IN AN DATABASE CALLED {hacked_country}_Ports.db",
-                    PortScanner.random_color)
+                bp.color(f"EVERY OPEN PORT OF THE IP-CAMERAS IN {hacked_country} WILL BE SAVED IN AN DATABASE CALLED {hacked_country}_Ports.db", PortScanner.random_color)
                 PortScanner.cool_text(PortScanner)
 
                 bp.color("\nSTARTING\n", PortScanner.random_color)
@@ -652,8 +658,7 @@ class PortScanner:
                     counter = bp.color(f"\nScanning {idx + 1} of {len(get_all_ports)}\n".upper(),
                                        PortScanner.random_color, False)
                     print(counter, end="")
-                    PortScanner.start_scanning(PortScanner, all_lst, every_port, print_text=False,
-                                               country=answer.upper(), ssh=True)
+                    PortScanner.start_scanning(PortScanner, all_lst, every_port, print_text=False, country=answer.upper(), ssh=True)
                 os.chdir("..")
 
                 if self.ssh_port:
@@ -680,8 +685,7 @@ class PortScanner:
         while True:
             global this_ip
             lst_everything = []
-            str_internal = bp.color("\n\nDo you want to scan your network? [y/n]: ".upper(), PortScanner.random_color,
-                                    False)
+            str_internal = bp.color("\n\nDo you want to scan your network? [y/n]: ".upper(), PortScanner.random_color, False)
             internal_ips = input(str_internal)
 
             if internal_ips.lower() == "y":
@@ -690,13 +694,11 @@ class PortScanner:
             elif internal_ips.lower() == "n":
                 while True:
                     global this_ip
-                    multiple = bp.color("Do you want to scan IP-CAMERAS [y/n]: ".upper(), PortScanner.random_color,
-                                        False)
+                    multiple = bp.color("Do you want to scan IP-CAMERAS [y/n]: ".upper(), PortScanner.random_color, False)
                     quest = input(multiple)
 
                     if quest.lower() == "n":
-                        str_an_ip = bp.color("Which ip or website do you want to Scan: ", PortScanner.random_color,
-                                             False)
+                        str_an_ip = bp.color("Which ip or website do you want to Scan: ", PortScanner.random_color, False)
                         this_ip = input(str_an_ip)
                         check_website += 1
                         break
