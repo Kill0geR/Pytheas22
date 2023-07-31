@@ -54,7 +54,8 @@ Thank you for using Pytheas22
 
 Additional
 ==========
-* Works only on Linux
+* Works on Linux and Windows
+* It takes around 1.11 seconds to scan a list with 31 elements
 
 * Pytheas22 is very easy to use.
 
