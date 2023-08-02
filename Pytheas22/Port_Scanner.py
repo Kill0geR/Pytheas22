@@ -255,32 +255,34 @@ class PortScanner:
             self.hostnames[ip] = hostname
 
     def get_name(self, ip, mac_address):
-        self.hostname = None
+        if re.match(r'(?:[0-9a-fA-F]-?){12}', mac_address):
+            self.hostname = None
 
-        data = requests.get(f"https://maclookup.app/search/result?mac={mac_address}")
-        split_data = data.text.split("\n")
+            data = requests.get(f"https://maclookup.app/search/result?mac={mac_address}")
+            split_data = data.text.split("\n")
 
-        if ip in self.hostnames:
-            self.hostname = self.hostnames[ip]
+            if ip in self.hostnames:
+                self.hostname = self.hostnames[ip]
 
-        if "No assignment is found for this MAC" not in data.text:
-            get_action = [every_action for every_action in split_data if
-                          '<div class="col-md-12" style="padding-bottom: 1em">' in every_action]
-            get_name = get_action[0].split("h2")
-            second = get_name[1]
-            this_name = second.split("<")
-            real_name = this_name[0].replace(">", "")
-            if self.hostname is not None:
-                return f"{real_name} (hostname: {self.hostname})"
+            if "No assignment is found for this MAC" not in data.text:
+                get_action = [every_action for every_action in split_data if
+                              '<div class="col-md-12" style="padding-bottom: 1em">' in every_action]
+                get_name = get_action[0].split("h2")
+                second = get_name[1]
+                this_name = second.split("<")
+                real_name = this_name[0].replace(">", "")
+                if self.hostname is not None:
+                    return f"{real_name} (hostname: {self.hostname})"
+                else:
+                    return real_name
+
             else:
-                return real_name
-
+                if self.hostname is not None:
+                    return f"Unknown (hostname: {self.hostname})"
+                else:
+                    return "Unknown"
         else:
-            if self.hostname is not None:
-                return f"Unknown (hostname: {self.hostname})"
-            else:
-                return "Unknown"
-
+            pass
 
 
     def pinging(self, ip):
@@ -303,7 +305,8 @@ class PortScanner:
         for every_ip in all_ips:
             try:
                 socket.inet_aton(every_ip)
-                valid_ip.append(every_ip)
+                if every_ip.split(".")[-1] in ["1", "255"]:
+                    valid_ip.append(every_ip)
             except socket.error:
                 continue
 
