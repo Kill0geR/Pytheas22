@@ -13,9 +13,6 @@ from requests.structures import CaseInsensitiveDict
 import requests
 import colorama
 from Pytheas22 import port_data
-import logging
-from logging import NullHandler
-from paramiko import SSHClient, AutoAddPolicy, AuthenticationException, ssh_exception
 import sys
 import csv
 import ipaddress
