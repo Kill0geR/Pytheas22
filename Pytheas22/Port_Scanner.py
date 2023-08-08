@@ -292,10 +292,15 @@ class PortScanner:
 
 
     def pinging(self, ip):
-        ping = subprocess.run(["ping", "-a", ip, "-n", "1", "-w", "1000"], capture_output=True).stdout
-        get_hostname = ping.split()[4].decode()
-        validate = PortScanner()
-        validate.validate_ip(ip, get_hostname)
+        try:
+            ping = subprocess.run(["ping", "-a", ip, "-n", "1", "-w", "1000"], capture_output=True).stdout
+            get_hostname = ping.split()[4].decode()
+            validate = PortScanner()
+            validate.validate_ip(ip, get_hostname)
+
+        except:
+            bp.color("THANK YOU FOR USING PYTHEAS22", PortScanner.random_color)
+            os._exit(0)
 
     def internal_windows(self):
         cmd = subprocess.run(["ipconfig", "/all"], capture_output=True)
