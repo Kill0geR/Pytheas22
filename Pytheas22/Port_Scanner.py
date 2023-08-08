@@ -194,7 +194,7 @@ class PortScanner:
                 f"http://www.insecam.org/en/bycountry/{country}/?page={page}",
                 headers=self.headers
             )
-            find_ip = re.findall(r"http://\d+.\d+.\d+.\d+:\d+", res.text)
+            find_ip = re.findall(r"https://(\d+\.){3}\d+:\d*", res.text)
 
             all_ips.extend(find_ip)
             amount = bp.color(f"\rScanning {page + 1} of {int(last_page)}".upper(), PortScanner.random_color, False)
@@ -255,7 +255,7 @@ class PortScanner:
             self.hostnames[ip] = hostname
 
     def get_name(self, ip, mac_address):
-        if re.match(r'(?:[0-9a-fA-F]-?){12}', mac_address):
+        if re.match(r'([a-fA-F0-9][a-fA-F0-9]-){5}[a-fA-F0-9]+', mac_address):
             self.hostname = None
 
             data = requests.get(f"https://maclookup.app/search/result?mac={mac_address}")
