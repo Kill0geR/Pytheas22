@@ -12,10 +12,10 @@ import sqlite3
 from requests.structures import CaseInsensitiveDict
 import requests
 import colorama
+from Pytheas22 import port_data
 import logging
 from logging import NullHandler
 from paramiko import SSHClient, AutoAddPolicy, AuthenticationException, ssh_exception
-from Pytheas22 import port_data
 import sys
 import csv
 import ipaddress
@@ -194,7 +194,7 @@ class PortScanner:
                 f"http://www.insecam.org/en/bycountry/{country}/?page={page}",
                 headers=self.headers
             )
-            find_ip = re.findall(r"https://(\d+\.){3}\d+:\d*", res.text)
+            find_ip = re.findall(r"http://\d+.\d+.\d+.\d+:\d+", res.text)
 
             all_ips.extend(find_ip)
             amount = bp.color(f"\rScanning {page + 1} of {int(last_page)}".upper(), PortScanner.random_color, False)
@@ -220,7 +220,9 @@ class PortScanner:
             lst_everything.extend(PortScanner.well_known_ports)
         else:
             bp.color(
-                "To specify the range you simply write 'number1-number2'. Number 1 should be smaller than number 2",
+                "To specify the range you simply write 'number1-number2'. "
+                "Number 1 should be smaller than number 2\n If you only want"
+                "to scan one port. Just type one number",
                 PortScanner.random_color)
             str_range = bp.color("What is your range: ", PortScanner.random_color, False)
             while True:
@@ -243,8 +245,14 @@ class PortScanner:
 
 
                 else:
-                    print("PLEASE WRITE A RANGE. EXAMPLE '20-80'")
-                    continue
+                    try:
+                        str_port_range = int(str_port_range)
+                        lst_everything.append(str_port_range)
+                        return lst_everything
+
+                    except ValueError:
+                        print("PLEASE WRITE A RANGE. EXAMPLE '20-80'. OR ONLY ONE NUMBER. EXAMPLE '22'")
+                        continue
         return lst_everything
 
     def validate_ip(self, ip, hostname):
@@ -255,34 +263,32 @@ class PortScanner:
             self.hostnames[ip] = hostname
 
     def get_name(self, ip, mac_address):
-        if re.match(r'([a-fA-F0-9][a-fA-F0-9]-){5}[a-fA-F0-9]+', mac_address):
-            self.hostname = None
+        self.hostname = None
 
-            data = requests.get(f"https://maclookup.app/search/result?mac={mac_address}")
-            split_data = data.text.split("\n")
+        data = requests.get(f"https://maclookup.app/search/result?mac={mac_address}")
+        split_data = data.text.split("\n")
 
-            if ip in self.hostnames:
-                self.hostname = self.hostnames[ip]
+        if ip in self.hostnames:
+            self.hostname = self.hostnames[ip]
 
-            if "No assignment is found for this MAC" not in data.text:
-                get_action = [every_action for every_action in split_data if
-                              '<div class="col-md-12" style="padding-bottom: 1em">' in every_action]
-                get_name = get_action[0].split("h2")
-                second = get_name[1]
-                this_name = second.split("<")
-                real_name = this_name[0].replace(">", "")
-                if self.hostname is not None:
-                    return f"{real_name} (hostname: {self.hostname})"
-                else:
-                    return real_name
-
+        if "No assignment is found for this MAC" not in data.text:
+            get_action = [every_action for every_action in split_data if
+                          '<div class="col-md-12" style="padding-bottom: 1em">' in every_action]
+            get_name = get_action[0].split("h2")
+            second = get_name[1]
+            this_name = second.split("<")
+            real_name = this_name[0].replace(">", "")
+            if self.hostname is not None:
+                return f"{real_name} (hostname: {self.hostname})"
             else:
-                if self.hostname is not None:
-                    return f"Unknown (hostname: {self.hostname})"
-                else:
-                    return "Unknown"
+                return real_name
+
         else:
-            pass
+            if self.hostname is not None:
+                return f"Unknown (hostname: {self.hostname})"
+            else:
+                return "Unknown"
+
 
 
     def pinging(self, ip):
@@ -305,8 +311,7 @@ class PortScanner:
         for every_ip in all_ips:
             try:
                 socket.inet_aton(every_ip)
-                if every_ip.split(".")[-1] in ["1", "255"]:
-                    valid_ip.append(every_ip)
+                valid_ip.append(every_ip)
             except socket.error:
                 continue
 
@@ -449,7 +454,7 @@ class PortScanner:
             ssh_client.connect(host, port=22, username=username, password=password, banner_timeout=300)
             with open("credentials_found.txt", "a") as file:
                 bp.color(f"Username - {username} and Password - {password} found for {host}!!!!1", PortScanner.random_color)
-                file.write(f"\nUsername: {username}\nPassword: {password}\nWorked on host {host}\nTime: {time.strftime('%H:%M: - %d.%m.%y')}")
+                file.write(f"Username: {username}\nPassword: {password}\nWorked on host {host}\nTime: {time.strftime('%H:%M: - %d.%m.%y')}\n\n")
                 bp.color("CHECK 'credentials_found.txt' TO SEE YOUR PASSWORD", PortScanner.random_color)
                 time.sleep(1)
         except AuthenticationException:
@@ -483,11 +488,15 @@ class PortScanner:
                     bp.color(f"'passwords.csv' could not be found. Download the file on my github: https://github.com/Kill0geR/Pytheas22", PortScanner.random_color)
                     quit()
 
+                start_time = time.perf_counter()
                 for host in ssh_lst:
                     for index, row in enumerate(all_passwords):
                         t = threading.Thread(target=self.__ssh_connect, args=(PortScanner, host, row[0], row[1],))
                         t.start()
                         time.sleep(0.2)
+
+                end = time.perf_counter()
+                print(f"Time: {end - start_time}")
 
                 break
 
