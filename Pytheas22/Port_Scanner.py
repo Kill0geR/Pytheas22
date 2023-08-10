@@ -385,7 +385,6 @@ class PortScanner:
         print()
         all_intern_ip = []
         just_ips = []
-        print("[NUMBER]    IP-ADDRESS          MANUFACTURER (HOSTNAME)")
         for number, every_ip in enumerate(PortScanner.every_ip_with_name):
             ip_name = every_ip[1]
             all_intern_ip.append(every_ip[0])
@@ -399,8 +398,8 @@ class PortScanner:
             if every_ip[0] == PortScanner.my_ip_address:
                 ip_name = "MY IP-ADDRESS"
 
-            printing = f"  [{number + 1}]:      {every_ip[0]}          "
-            amount_spaces = 37 - len(printing)
+            printing = f"[{number + 1}]: {every_ip[0]}          "
+            amount_spaces = 32 - len(printing)
             spaces = f"".join([" " for k in range(amount_spaces)])
             printing += spaces
 
