@@ -385,7 +385,7 @@ class PortScanner:
         print()
         all_intern_ip = []
         just_ips = []
-        print("[NUMBER]    IP-ADDRESS          Manufacturer (HOSTNAME)")
+        print("[NUMBER]    IP-ADDRESS          MANUFACTURER (HOSTNAME)")
         for number, every_ip in enumerate(PortScanner.every_ip_with_name):
             ip_name = every_ip[1]
             all_intern_ip.append(every_ip[0])
