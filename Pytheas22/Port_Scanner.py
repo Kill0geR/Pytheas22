@@ -374,11 +374,10 @@ class PortScanner:
         if idx == 3: self.all_ip_linux = [f"{network}.{num_1}" for num_1 in range(1, 255)]
 
         for each in self.all_ip_linux:
-            thread = threading.Thread(target=self.pinging, args=(each,))
+            thread = threading.Thread(target=self.linux_pinging, args=(each,))
             thread.start()
 
         while True:
-            number += 1
             arp = subprocess.run(["arp", "-a"], capture_output=True).stdout.decode()
             find = re.findall("<\w*>", arp)
             if not find:
