@@ -288,7 +288,6 @@ class PortScanner:
 
     def get_name(self, ip, mac_address):
         if re.match(r'(?:[0-9a-fA-F]-?){12}', mac_address) or re.match(r'(?:[0-9a-fA-F]:?){12}', mac_address):
-            print(self.hostnames)
             if ip in self.hostnames:
                 self.hostname = self.hostnames[ip]
 
@@ -353,7 +352,7 @@ class PortScanner:
         return ip_name
 
     def linux_pinging(self, ip):
-        ping = sb.run(["ping", "-c", "1", ip], capture_output=True)
+        ping = subprocess.run(["ping", "-c", "1", ip], capture_output=True)
 
     def internal_linux(self):
         range_1, range_2, range_3 = [num for num in range(1, 9)], [num for num in range(9, 17)], [num for num in
@@ -377,12 +376,14 @@ class PortScanner:
             thread = threading.Thread(target=self.linux_pinging, args=(each,))
             thread.start()
 
+        time.sleep(7)
         while True:
             arp = subprocess.run(["arp", "-a"], capture_output=True).stdout.decode()
             find = re.findall("<\w*>", arp)
             if not find:
                 break
 
+        spalten = arp.split()
         data = [(spalten[idx], spalten[idx + 1].replace("(", "").replace(")", ""), spalten[idx + 3])
                 for idx in range(0, len(spalten), 7)]
 
@@ -392,7 +393,11 @@ class PortScanner:
         get_mac = PortScanner()
         ip_name = [(ip, get_mac.get_name(ip, mac)) for host, ip, mac in data]
 
-        return ip_name
+        sorted_numbers = sorted([int(ip[0].split(".")[-1]) for ip in ip_name])
+        sorted_data = [every_ip for each_number in sorted_numbers for every_ip in ip_name
+                       if each_number == int(every_ip[0].split(".")[-1])]
+
+        return sorted_data
 
 
     @staticmethod
@@ -420,7 +425,6 @@ class PortScanner:
         print()
         all_intern_ip = []
         just_ips = []
-        print(PortScanner.every_ip_with_name)
         for number, every_ip in enumerate(PortScanner.every_ip_with_name):
             ip_name = every_ip[1]
             all_intern_ip.append(every_ip[0])
