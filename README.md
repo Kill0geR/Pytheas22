@@ -35,9 +35,6 @@ Install requirements:
 
 `pip install -r requirements.txt`
 
-Install nmap (kali linux has it already installed)
-
-`sudo apt-get install nmap`
 
 Install nslookup (kali linux has it already installed)
 
@@ -55,6 +52,7 @@ Thank you for using Pytheas22
 Additional
 ==========
 * Works on Linux and Windows
+  
 * It takes around 1.11 seconds to scan a list with 31 elements
 
 * Pytheas22 is very easy to use.
