@@ -73,6 +73,7 @@ class PortScanner:
         self.country_name = None
         self.addresses = None
         self.gui = string_port
+        self.idx = None
 
     def cool_text(self):
         thread_wait = threading.Thread(target=PortScanner.wait)
@@ -323,7 +324,7 @@ class PortScanner:
         for every_ip in all_ips:
             try:
                 socket.inet_aton(every_ip)
-                if every_ip.split(".")[-1] in ["1", "255"]:
+                if every_ip.split(".")[-1] not in ["1", "255"]:
                     valid_ip.append(every_ip)
             except socket.error:
                 continue
@@ -347,6 +348,7 @@ class PortScanner:
                     if mac_ip != "ff-ff-ff-ff-ff-ff":
                         indexes.append((arp_ip, mac_ip))
 
+
         get_mac = PortScanner()
         ip_name = [(ip, get_mac.get_name(ip, mac)) for ip, mac in indexes]
         return ip_name
@@ -360,17 +362,17 @@ class PortScanner:
         net = self.get_ip()
         subnet, my_ip = int(net[1][0][1]), net[1][0][0]
 
-        if subnet in range_1: idx = 1
-        if subnet in range_2: idx = 2
-        if subnet in range_3: idx = 3
+        if subnet in range_1: self.idx = 1
+        if subnet in range_2: self.idx = 2
+        if subnet in range_3: self.idx = 3
 
-        get_network = my_ip.split(".")[0: idx]
+        get_network = my_ip.split(".")[0: self.idx]
         network = ".".join(get_network)
 
-        if idx == 1: self.all_ip_linux = [f"{network}.{num_1}.{num_2}.{num_3}" for num_1 in range(1, 255) for num_2 in
+        if self.idx == 1: self.all_ip_linux = [f"{network}.{num_1}.{num_2}.{num_3}" for num_1 in range(1, 255) for num_2 in
                                range(0, 255) for num_3 in range(0, 255)]
-        if idx == 2: self.all_ip_linux = [f"{network}.{num_1}.{num_2}" for num_1 in range(1, 255) for num_2 in range(0, 255)]
-        if idx == 3: self.all_ip_linux = [f"{network}.{num_1}" for num_1 in range(1, 255)]
+        if self.idx == 2: self.all_ip_linux = [f"{network}.{num_1}.{num_2}" for num_1 in range(1, 255) for num_2 in range(0, 255)]
+        if self.idx == 3: self.all_ip_linux = [f"{network}.{num_1}" for num_1 in range(1, 255)]
 
         for each in self.all_ip_linux:
             thread = threading.Thread(target=self.linux_pinging, args=(each,))
@@ -416,7 +418,8 @@ class PortScanner:
         elif sys.platform == "win32" or sys.platform == "windows" or sys.platform == "win64":
             win_threading_wait = threading.Thread(target=PortScanner.wait)
             win_threading_wait.start()
-            PortScanner.every_ip_with_name = PortScanner.internal_windows(PortScanner)
+            windows = PortScanner()
+            PortScanner.every_ip_with_name = windows.internal_windows()
             time.sleep(0.5)
             PortScanner.waiting = True
             time.sleep(0.5)
