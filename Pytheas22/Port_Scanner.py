@@ -65,7 +65,6 @@ class PortScanner:
     check_open_port = []
     open_ports = []
     hostnames = {}
-    all_ip_linux = []
     hostname = None
 
     def __init__(self):
@@ -73,7 +72,6 @@ class PortScanner:
         self.country_name = None
         self.addresses = None
         self.gui = string_port
-        self.idx = None
 
     def cool_text(self):
         thread_wait = threading.Thread(target=PortScanner.wait)
@@ -353,54 +351,6 @@ class PortScanner:
         ip_name = [(ip, get_mac.get_name(ip, mac)) for ip, mac in indexes]
         return ip_name
 
-    def linux_pinging(self, ip):
-        ping = subprocess.run(["ping", "-c", "1", ip], capture_output=True)
-
-    def internal_linux(self):
-        range_1, range_2, range_3 = [num for num in range(1, 9)], [num for num in range(9, 17)], [num for num in
-                                                                                                  range(17, 33)]
-        net = self.get_ip()
-        subnet, my_ip = int(net[1][0][1]), net[1][0][0]
-
-        if subnet in range_1: self.idx = 1
-        if subnet in range_2: self.idx = 2
-        if subnet in range_3: self.idx = 3
-
-        get_network = my_ip.split(".")[0: self.idx]
-        network = ".".join(get_network)
-
-        if self.idx == 1: self.all_ip_linux = [f"{network}.{num_1}.{num_2}.{num_3}" for num_1 in range(1, 255) for num_2 in
-                               range(0, 255) for num_3 in range(0, 255)]
-        if self.idx == 2: self.all_ip_linux = [f"{network}.{num_1}.{num_2}" for num_1 in range(1, 255) for num_2 in range(0, 255)]
-        if self.idx == 3: self.all_ip_linux = [f"{network}.{num_1}" for num_1 in range(1, 255)]
-
-        for each in self.all_ip_linux:
-            thread = threading.Thread(target=self.linux_pinging, args=(each,))
-            thread.start()
-
-        time.sleep(7)
-        while True:
-            arp = subprocess.run(["arp", "-a"], capture_output=True).stdout.decode()
-            find = re.findall("<\w*>", arp)
-            if not find:
-                break
-
-        spalten = arp.split()
-        data = [(spalten[idx], spalten[idx + 1].replace("(", "").replace(")", ""), spalten[idx + 3])
-                for idx in range(0, len(spalten), 7)]
-
-        all_hostnames = {host[1]: host[0] for idx, host in enumerate(data) if host[0] != "?"}
-        self.hostnames.update(all_hostnames)
-
-        get_mac = PortScanner()
-        ip_name = [(ip, get_mac.get_name(ip, mac)) for host, ip, mac in data]
-
-        sorted_numbers = sorted([int(ip[0].split(".")[-1]) for ip in ip_name])
-        sorted_data = [every_ip for each_number in sorted_numbers for every_ip in ip_name
-                       if each_number == int(every_ip[0].split(".")[-1])]
-
-        return sorted_data
-
 
     @staticmethod
     def internal_network():
@@ -409,11 +359,31 @@ class PortScanner:
         if sys.platform == "linux":
             threading_wait = threading.Thread(target=PortScanner.wait)
             threading_wait.start()
-            linux = PortScanner()
-            PortScanner.every_ip_with_name = linux.internal_linux()
+            host_ip = PortScanner.get_ip()
+            PortScanner.my_ip_address = host_ip[1][0][0]
+            all_data = subprocess.run(["nmap", "-sn", f"{host_ip[0]}/{host_ip[1][0][1]}"], capture_output=True)
             PortScanner.waiting = True
             time.sleep(0.6)
             PortScanner.waiting = False
+            get_everything = str(all_data).split()
+            all_ips = [(get_everything[idx + 1].replace("\\nHost", ""), get_everything[idx + 2].replace("\\nHost", ""),
+                        get_everything[idx + 8].replace("\\nNmap", "").replace("(", "").replace(")", "")) for idx, ip in
+                       enumerate(get_everything) if ip == "for"]
+            internal_networks = [ips[0] for ips in all_ips if not re.search("[a-zA-Z]", ips[0])]
+            others = [name for name in all_ips if re.search("[a-zA-Z]", name[0])]
+
+            for every_ip in all_ips:
+                for this_ip in internal_networks:
+                    if this_ip == every_ip[0]:
+                        if not re.search("[a-zA-Z]", every_ip[2]):
+                            PortScanner.every_ip_with_name.append((this_ip, "Unknown"))
+                        else:
+                            PortScanner.every_ip_with_name.append((this_ip, every_ip[2]))
+
+            if others:
+                for not_in_lst in others:
+                    PortScanner.every_ip_with_name.append(
+                        (not_in_lst[1].replace("(", "").replace(")", ""), not_in_lst[0]))
 
         elif sys.platform == "win32" or sys.platform == "windows" or sys.platform == "win64":
             win_threading_wait = threading.Thread(target=PortScanner.wait)
