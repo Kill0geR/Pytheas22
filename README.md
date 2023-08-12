@@ -40,7 +40,6 @@ Install nmap (kali linux has it already installed)
 
 `sudo apt-get install nmap`
 
-
 Install nslookup (kali linux has it already installed)
 
 `sudo apt install dnsutils`
