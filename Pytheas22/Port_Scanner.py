@@ -536,9 +536,6 @@ class PortScanner:
             except TimeoutError:
                 pass
 
-            except OSError:
-                pass
-
             except socket.gaierror:
                 if not PortScanner.is_web:
                     if print_text:
@@ -555,7 +552,10 @@ class PortScanner:
                 pass
         except ConnectionRefusedError:
             pass
-
+               
+        except OSError:
+                pass
+               
     def start_scanning(self, port_lst, this_ip, print_text=True, country=None, ssh=False, scan_internal_ip=False):
         original = this_ip
         if "http" in this_ip:
