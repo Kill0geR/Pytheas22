@@ -532,8 +532,11 @@ class PortScanner:
                 self.check_open_port.append(port)
                 time.sleep(0.5)
                 if port == 22: self.ssh_port.append(this_ip)
-
+              
             except TimeoutError:
+                pass
+
+            except OSError:
                 pass
 
             except socket.gaierror:
