@@ -476,7 +476,7 @@ class PortScanner:
                 bp.color(f"Username - {username} and Password - {password} found for {host}!!!!1",
                          PortScanner.random_color)
                 file.write(
-                    f"\nUsername: {username}\nPassword: {password}\nWorked on host {host}\nTime: {time.strftime('%H:%M: - %d.%m.%y')}")
+                    f"Username: {username}\nPassword: {password}\nWorked on host {host}\nTime: {time.strftime('%H:%M: - %d.%m.%y')}\n\n")
                 bp.color("CHECK 'credentials_found.txt' TO SEE YOUR PASSWORD", PortScanner.random_color)
                 time.sleep(1)
         except AuthenticationException:
