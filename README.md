@@ -36,11 +36,11 @@ Install requirements:
 `pip install -r requirements.txt`
 
 
-Install nmap (kali linux has it already installed)
+Install nmap (kali linux has it already installed (not needed in Windows))
 
 `sudo apt-get install nmap`
 
-Install nslookup (kali linux has it already installed)
+Install nslookup (kali linux has it already installed (not needed in Windows))
 
 `sudo apt install dnsutils`
 
