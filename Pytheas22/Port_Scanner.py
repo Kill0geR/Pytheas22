@@ -172,7 +172,7 @@ class PortScanner:
     def get_ip(cls):
         open_ports = subprocess.run(["ip", "a"], capture_output=True)
         everything = str(open_ports).split()
-        ipaddress = [everything[ip + 1] for ip, inet in enumerate(everything) if inet == "inet"]
+        ipaddress = [everything[ip + 1] for ip, inet in enumerate(everything) if inet == "inet" and everything[ip+12] == "inet6" ]
 
         for each_ip in ipaddress:
             real_ip = each_ip.split("/")
@@ -375,7 +375,7 @@ class PortScanner:
             for every_ip in all_ips:
                 for this_ip in internal_networks:
                     if this_ip == every_ip[0]:
-                        if not re.search("[a-zA-Z]", every_ip[2]):
+                        if not re.search("[a-zA-Z]", every_ip[2]):  
                             PortScanner.every_ip_with_name.append((this_ip, "Unknown"))
                         else:
                             PortScanner.every_ip_with_name.append((this_ip, every_ip[2]))
@@ -384,6 +384,11 @@ class PortScanner:
                 for not_in_lst in others:
                     PortScanner.every_ip_with_name.append(
                         (not_in_lst[1].replace("(", "").replace(")", ""), not_in_lst[0]))
+            
+            get_only_ips = [ip for ip, host in PortScanner.every_ip_with_name]
+            numbers = sorted([int(each_ip.split(".")[-1]) for each_ip in get_only_ips])
+            sorted_ips = [(ip, host) for num in numbers for ip, host in PortScanner.every_ip_with_name if int(ip.split(".")[-1]) == num]
+            PortScanner.every_ip_with_name = sorted_ips
 
         elif sys.platform == "win32" or sys.platform == "windows" or sys.platform == "win64":
             win_threading_wait = threading.Thread(target=PortScanner.wait)
@@ -410,10 +415,15 @@ class PortScanner:
                 pass
             if every_ip[0] == PortScanner.my_ip_address:
                 ip_name = "MY IP-ADDRESS"
-
-            printing = f"[{number + 1}]: {every_ip[0]}          "
-            amount_spaces = 32 - len(printing)
-            spaces = f"".join([" " for k in range(amount_spaces)])
+            
+            
+            ip_len = f"[{number + 1}]:"
+            length = 6 - len(ip_len)
+            spaces_len = f"".join([" " for _ in range(length)])
+            ip_len += spaces_len
+            printing = f"{ip_len}{every_ip[0]}          "
+            amount_spaces = 34 - len(printing)
+            spaces = f"".join([" " for _ in range(amount_spaces)])
             printing += spaces
 
             bp.color(f"{printing}{ip_name}", PortScanner.random_color)
