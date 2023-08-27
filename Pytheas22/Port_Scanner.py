@@ -172,7 +172,7 @@ class PortScanner:
     def get_ip(cls):
         open_ports = subprocess.run(["ip", "a"], capture_output=True)
         everything = str(open_ports).split()
-        ipaddress = [everything[ip + 1] for ip, inet in enumerate(everything) if inet == "inet" and everything[ip+12] == "inet6" ]
+        ipaddress = [everything[ip + 1] for ip, inet in enumerate(everything) if inet == "inet"]
 
         for each_ip in ipaddress:
             real_ip = each_ip.split("/")
