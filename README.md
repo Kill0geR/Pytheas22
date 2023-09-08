@@ -11,7 +11,7 @@ Pytheas22 is an innovative Port Scanner. It scans IP-Cameras of countries, your 
 If the port 22 of an IP-Address or a website is open pytheas22 will try to login to the host via bruteforce.
 
 
-Pytheas22 is recommended to be used in Kali linux but works on every linux distro
+Pytheas22 is recommended to be used in Kali linux but works on every linux distro as well on Windows
 
 First of all
 ===========
