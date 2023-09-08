@@ -1,2 +1,2 @@
 #!/bin/bash
-arp = $(arpspoof -i wlan0 -t 192.168.0.249 192.168.0.1)
+arp = $(arpspoof -i wlan0 -t router_ip target_ip)
