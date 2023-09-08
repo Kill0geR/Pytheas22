@@ -6,7 +6,7 @@ Pytheas22
 
 Created by: Fawaz Bashiru
 
-Pytheas22 is an innovative Port Scanner. It scans IP-Cameras of countries, your home network and individual IP-Addresses or websites. Analysis of the IP-Cameras and the scanned home network will be saved in a database. Every open port will have a documentation.
+Pytheas22 is an innovative Port Scanner. It scans IP-Cameras of countries, your home network and individual IP-Addresses or websites. Analysis of the IP-Cameras and the scanned home network will be saved in a database. Every open port will have a documentation. Pytheas22 can also arpsooof a device on your network
 
 If the port 22 of an IP-Address or a website is open pytheas22 will try to login to the host via bruteforce.
 
@@ -43,6 +43,9 @@ Install nmap (kali linux has it already installed (not needed in Windows))
 Install nslookup (kali linux has it already installed (not needed in Windows))
 
 `sudo apt install dnsutils`
+
+Install dsniff (for arpspoffing)
+`sudo apt install dsniff`
 
 If finished run the main.py file
 
