@@ -363,13 +363,16 @@ class PortScanner:
         with open(filename, "r+") as file:
             data = file.read()
             data = data.split()
-            data[5] = device
-            data[7] = pos1
-            data[8] = pos2 + ")"
-            data[0] = data[0] + "\n"
+            data[21] = device
+            data[23] = pos1
+            data[24] = pos2 + ")"
+            data[0] += "\n"
+            data[6] += "\n"
+            data[14] += "\n"
+            data[16] += "\n"
 
             for idx, space in enumerate(data[1:]):
-                if idx != 0:
+                if idx not in [0, 6, 14, 16]:
                     data[idx] += " "
 
         with open(filename, "w+") as file:
