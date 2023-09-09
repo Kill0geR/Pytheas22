@@ -360,7 +360,6 @@ class PortScanner:
 
     @staticmethod
     def change_file(filename, pos1, pos2, device):
-        os.chdir("ARPSPOOF_SCRIPT")
         with open(filename, "r+") as file:
             data = file.read()
             data = data.split()
@@ -376,7 +375,6 @@ class PortScanner:
         with open(filename, "w+") as file:
             for each in data:
                 file.write(each)
-        os.chdir("..")
 
     @staticmethod
     def spoof_ip(router, target):
@@ -400,7 +398,6 @@ class PortScanner:
                 PortScanner.change_file("router.sh", router, target, chosen_device)
                 PortScanner.change_file("target.sh", target, router, chosen_device)
                 bp.color("\n\nOPEN TWO TERMINALS\n"
-                         "GO TO THE DIRECTORY 'ARPSPOOF_SCRIPT'\n"
                          "RUN 'bash router.sh' ON THE FIRST TERMINAL AND \n"
                          "RUN 'bash target.sh' ON THE SECOND TERMINAL\n"
                          "TO SPOOF YOUR TARGET\n\nTHANK YOU FOR USING PYTHEAS22", PortScanner.random_color)
