@@ -73,6 +73,9 @@ class PortScanner:
         self.addresses = None
         self.gui = string_port
 
+    def print_gui(self):
+        bp.color(self.gui, PortScanner.random_color)
+
     def cool_text(self):
         thread_wait = threading.Thread(target=PortScanner.wait)
         thread_wait.start()
@@ -380,7 +383,7 @@ class PortScanner:
                 file.write(each)
 
     @staticmethod
-    def spoof_ip(router, target):
+    def __spoof_ip(router, target):
         get_device = subprocess.run(["nmcli", "connection", "show"], capture_output=True).stdout.decode()
 
         get_device = get_device.split()[4:]
@@ -394,21 +397,22 @@ class PortScanner:
                     devices.append(device)
 
         if devices:
-            all_devices = " ".join(devices)
-            bp.color(f"\nALL DEVICES: {all_devices}\n", PortScanner.random_color)
-            chosen_device = input(bp.color("WHICH DEVICE DO YOU WANT TO RUN YOUR SPOOF ON?: ", PortScanner.random_color, False))
-            if chosen_device in devices:
-                PortScanner.change_file("router.sh", router, target, chosen_device)
-                PortScanner.change_file("target.sh", target, router, chosen_device)
-                bp.color("\n\nOPEN TWO TERMINALS\n"
-                         "RUN 'bash router.sh' ON THE FIRST TERMINAL AND \n"
-                         "RUN 'bash target.sh' ON THE SECOND TERMINAL\n"
-                         "TO SPOOF YOUR TARGET\n\nTHANK YOU FOR USING PYTHEAS22", PortScanner.random_color)
-                sys.exit()
+            while True:
+                all_devices = " ".join(devices)
+                bp.color(f"\nALL DEVICES: {all_devices}\n", PortScanner.random_color)
+                chosen_device = input(bp.color("WHICH DEVICE DO YOU WANT TO RUN YOUR SPOOF ON?: ", PortScanner.random_color, False))
+                if chosen_device in devices:
+                    PortScanner.change_file("router.sh", router, target, chosen_device)
+                    PortScanner.change_file("target.sh", target, router, chosen_device)
+                    bp.color("\n\nOPEN TWO TERMINALS\n"
+                             "RUN 'bash router.sh' ON THE FIRST TERMINAL AND \n"
+                             "RUN 'bash target.sh' ON THE SECOND TERMINAL\n"
+                             "TO SPOOF YOUR TARGET\n\nTHANK YOU FOR USING PYTHEAS22", PortScanner.random_color)
+                    sys.exit()
 
-            else:
-                print(f"{chosen_device} IS NOT IN LIST")
-                sys.exit()
+                else:
+                    print(f"{chosen_device} IS NOT IN LIST")
+                    continue
 
 
         else:
@@ -417,7 +421,7 @@ class PortScanner:
             sys.exit()
 
 
-    def __arp_spoof(self):
+    def arp_spoof(self):
         self.ip = None
         if sys.platform != "linux":
             print("SORRY THIS ONLY WORKS ON LINUX. YOU CAN USE A VIRTUAL MACHINE TO RUN THIS")
@@ -438,7 +442,21 @@ class PortScanner:
                         continue
                     else:
                         self.ip = all_ips[self.ip - 1]
-                    break
+
+                    if router:
+                        if self.ip != router:
+                            spoof = PortScanner()
+                            spoof.__spoof_ip(router, self.ip)
+                        else:
+                            print("YOU CANNOT SPOOF YOUR ROOTER")
+                            continue
+                    else:
+                        print("THE ROUTER COULD NOT BE FOUND. PLEASE TYPE IT MANUALLY")
+                        router_question = bp.color("\nRouter's IP: ", PortScanner.random_color, False)
+                        get_router = input(router_question)
+                        spoof = PortScanner()
+                        spoof.__spoof_ip(get_router, self.ip)
+
                 except ValueError:
                     print("PLEASE WRITE NUMBERS NOT STRINGS")
                     continue
@@ -446,20 +464,6 @@ class PortScanner:
                 except IndexError:
                     print("PLEASE WRITE A NUMBER THAT IS ABOVE YOU")
                     continue
-
-            if router:
-                if self.ip != router:
-                    spoof = PortScanner()
-                    spoof.spoof_ip(router, self.ip)
-                else:
-                    print("YOU CANNOT SPOOF YOUR ROOTER")
-                    sys.exit()
-            else:
-                print("THE ROUTER COULD NOT BE FOUND. PLEASE TYPE IT MANUALLY")
-                router_question = bp.color("\nRouter's IP: ", PortScanner.random_color, False)
-                get_router = input(router_question)
-                spoof = PortScanner()
-                spoof.spoof_ip(get_router, self.ip)
 
     @staticmethod
     def linux_lst():
@@ -876,7 +880,7 @@ class PortScanner:
                         ask_arp = bp.color("Do you want to Arp Spoof someone on your network [y/n]: ".upper(), PortScanner.random_color, False)
                         asking_arp = input(ask_arp)
                         if asking_arp.lower() == "y":
-                            self.__arp_spoof()
+                            self.arp_spoof()
                         else:
                             str_an_ip = bp.color("Which ip or website do you want to Scan: ", PortScanner.random_color,
                                                  False)
