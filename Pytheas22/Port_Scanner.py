@@ -560,6 +560,7 @@ class PortScanner:
                 break
 
             elif answer_intern.lower() == "y":
+                start = time.perf_counter()
                 for idx, every_port in enumerate(all_intern_ip):
                     counter = bp.color(f"\nScanning {idx + 1} of {len(all_intern_ip)}\n".upper(),
                                        PortScanner.random_color, False)
@@ -568,6 +569,9 @@ class PortScanner:
                     scan.start_scanning(PortScanner.well_known_ports, every_port, print_text=False,
                                                ssh=True, scan_internal_ip=True)
                     time.sleep(0.5)
+                end = time.perf_counter()
+                seconds = round(end-start, 2)
+                bp.color(f"IT TOOK PYTEASS22 {seconds} SECONDS TO SCAN {len(all_intern_ip)} IP's WITH {len(PortScanner.well_known_ports)} Ports", PortScanner.random_color)
 
                 if PortScanner.ssh_port:
                     hacking = PortScanner()
@@ -579,6 +583,7 @@ class PortScanner:
                 else:
                     bp.color("No IP'Address has an open port", PortScanner.random_color)
 
+                bp.color("THANK YOU FOR USING PYTHEAS22", PortScanner.random_color )
                 quit()
 
         while True:
@@ -830,14 +835,20 @@ class PortScanner:
                 self.cool_text()
 
                 bp.color("\nSTARTING\n", PortScanner.random_color)
-                for idx, every_port in enumerate(get_all_ports):
+                start = time.perf_counter()
+                for idx, every_ip in enumerate(get_all_ports):
                     counter = bp.color(f"\nScanning {idx + 1} of {len(get_all_ports)}\n".upper(),
                                        PortScanner.random_color, False)
                     print(counter, end="")
-                    self.start_scanning(all_lst, every_port, print_text=False,
+                    self.start_scanning(all_lst, every_ip, print_text=False,
                                                country=answer.upper(), ssh=True)
                 os.chdir("..")
+                end = time.perf_counter()
+                seconds = round(end-start, 2)
+                if len(all_lst) == 1: port = "Port"
+                else: port = "ports"
 
+                print(f"\nIT TOOK PYTEASS22 {seconds} SECONDS TO SCAN {len(get_all_ports)} IP's WITH {len(all_lst)} {port}")
                 if self.ssh_port:
                     self.hack_ip_ssh(self.ssh_port)
                 if self.check_open_port:
