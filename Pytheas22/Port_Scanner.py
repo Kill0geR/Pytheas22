@@ -582,9 +582,10 @@ class PortScanner:
                         idx += 1
                         print("".join("_" for _ in range(50)))
                         bp.color(f"[{idx}] {ip} open ports\n", PortScanner.random_color)
-                        for each in port_lst:
+                        for checking, each in enumerate(port_lst):
                             bp.color(each, PortScanner.random_color)
-                            print()
+                            if checking != port_lst.index(port_lst[-1]):
+                                print()
                         print("".join("_" for _ in range(50)))
                         print(f"\n\n")
 
