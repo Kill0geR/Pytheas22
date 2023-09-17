@@ -744,7 +744,7 @@ class PortScanner:
             thread.join()
 
         end = time.perf_counter()
-        print(f"IT TOOK AROUND {round(end - start_time, 2)} SECONDS TO FINISH SCANNING PORTS")
+        print(f"IT TOOK AROUND {round(end - start_time, 2)} SECONDS TO FINISH SCANNING PORTS OF THE IP {this_ip}")
 
         if PortScanner.is_web:
             output = subprocess.run(["nslookup", this_ip], capture_output=True)
