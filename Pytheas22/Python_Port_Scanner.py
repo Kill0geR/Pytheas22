@@ -1,4 +1,3 @@
-import time
 from .Port_Scanner import PortScanner
 import BetterPrinting as bp
 
@@ -33,6 +32,9 @@ class PythonPortScanner(PythonPortScannerList):
         self.every_lst = every_lst
         self.ssh_bruteforce = ssh_bruteforce
 
+    def print_gui(self):
+        bp.color(self.gui, PortScanner.random_color)
+
     def scan_one_addr(self, ip):
         self.print_gui()
         self.make_lst()
@@ -40,6 +42,7 @@ class PythonPortScanner(PythonPortScannerList):
         self.start_scanning(self.every_lst, ip, ssh=self.ssh_bruteforce)
 
     def scan_internal_network(self):
+        PortScanner.pps = True
         self.print_gui()
         self.make_lst()
         get_ip = PortScanner.internal_network()
@@ -48,14 +51,6 @@ class PythonPortScanner(PythonPortScannerList):
     def scan_ip_cameras(self):
         self.print_gui()
         self.make_lst()
+        PortScanner.ip_cameras(PortScanner, port_lst=self.every_lst, ssh=self.ssh_bruteforce)
 
-        self.ip_cameras(port_lst=self.every_lst)
 
-
-class ArpSpoofing(PortScanner):
-    def __init__(self):
-        super().__init__()
-
-    def spoof_network(self):
-        self.print_gui()
-        self.arp_spoof()
