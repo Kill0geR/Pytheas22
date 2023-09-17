@@ -596,9 +596,6 @@ class PortScanner:
                 else:
                     bp.color("No IP'Address has an open port", PortScanner.random_color)
 
-                if PortScanner.nice_printing:
-                    print(PortScanner.nice_printing)
-
                 if PortScanner.ssh_port:
                     hacking = PortScanner()
                     hacking.hack_ip_ssh(PortScanner.ssh_port)
