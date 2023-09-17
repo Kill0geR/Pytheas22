@@ -722,13 +722,13 @@ class PortScanner:
             idx = 0
             for ip, port_lst in PortScanner.nice_printing:
                 idx += 1
-                print("".join(" _ " for _ in range(50)))
+                bp.color("".join("_" for _ in range(50)), PortScanner.random_color)
                 bp.color(f"[{idx}] {ip} open ports\n", PortScanner.random_color)
                 for checking, each in enumerate(port_lst):
                     bp.color(each, PortScanner.random_color)
                     if checking != port_lst.index(port_lst[-1]):
                         print()
-                print("".join("_" for _ in range(50)))
+                bp.color("".join("_" for _ in range(50)), PortScanner.random_color)
                 print(f"\n\n")
 
     def start_scanning(self, port_lst, this_ip, print_text=True, country=None, ssh=False, scan_internal_ip=False):
