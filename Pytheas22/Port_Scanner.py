@@ -67,6 +67,9 @@ class PortScanner:
     hostname = None
     open_ports = []
     nice_printing = []
+    all_intern_ip = None
+    scan_all = False
+    pps = False
 
     def __init__(self):
         self.headers = None
@@ -532,9 +535,42 @@ class PortScanner:
             just_ips.append(every_ip[0])
         return all_intern_ip, just_ips
 
+
+    def scan_all_ip(self):
+        start = time.perf_counter()
+        for idx, every_port in enumerate(self.all_intern_ip):
+            counter = bp.color(f"\nScanning {idx + 1} of {len(self.all_intern_ip)}\n".upper(),
+                               PortScanner.random_color, False)
+            print(counter, end="")
+            scan = PortScanner()
+            scan.start_scanning(PortScanner.well_known_ports, every_port, print_text=False,
+                                ssh=True, scan_internal_ip=True)
+            time.sleep(0.5)
+        end = time.perf_counter()
+        seconds = round(end - start, 2)
+        bp.color(
+            f"IT TOOK PYTEASS22 {seconds} SECONDS TO SCAN {len(self.all_intern_ip)} IP's WITH {len(PortScanner.well_known_ports)} Ports",
+            PortScanner.random_color)
+
+        nice_printing = PortScanner()
+        nice_printing.print_func()
+
+        if "Internal_Network.db" in os.listdir():
+            bp.color("All open ports in your network has been saved to 'Internal_Network.db'",
+                     PortScanner.random_color)
+        else:
+            bp.color("No IP'Address has an open port", PortScanner.random_color)
+
+        if PortScanner.ssh_port:
+            hacking = PortScanner()
+            hacking.hack_ip_ssh(PortScanner.ssh_port)
+
+        bp.color("THANK YOU FOR USING PYTHEAS22", PortScanner.random_color)
+        quit()
+
     @staticmethod
     def internal_network():
-        global this_ip
+        global this_ip, answer_intern
         bp.color("ALL THE DEVICES IN YOUR NETWORK WILL BE SHOWN SOON", PortScanner.random_color)
         if sys.platform == "linux":
             get_lst = PortScanner()
@@ -551,50 +587,27 @@ class PortScanner:
             PortScanner.waiting = False
 
         print()
-        all_intern_ip, just_ips = PortScanner.print_internal()
+        PortScanner.all_intern_ip, just_ips = PortScanner.print_internal()
 
         while True:
-            scan_intern = bp.color("\nDo you want to scan all ip's? [y/n]: ".upper(), PortScanner.random_color, False)
-            answer_intern = input(scan_intern)
-
-            if answer_intern.lower() == "n":
+            if PortScanner.pps and not PortScanner.scan_all:
                 break
 
-            elif answer_intern.lower() == "y":
-                start = time.perf_counter()
-                for idx, every_port in enumerate(all_intern_ip):
-                    counter = bp.color(f"\nScanning {idx + 1} of {len(all_intern_ip)}\n".upper(),
-                                       PortScanner.random_color, False)
-                    print(counter, end="")
-                    scan = PortScanner()
-                    scan.start_scanning(PortScanner.well_known_ports, every_port, print_text=False,
-                                        ssh=True, scan_internal_ip=True)
-                    time.sleep(0.5)
-                end = time.perf_counter()
-                seconds = round(end - start, 2)
-                bp.color(
-                    f"IT TOOK PYTEASS22 {seconds} SECONDS TO SCAN {len(all_intern_ip)} IP's WITH {len(PortScanner.well_known_ports)} Ports",
-                    PortScanner.random_color)
+            if not PortScanner.scan_all:
+                scan_intern = bp.color("\nDo you want to scan all ip's? [y/n]: ".upper(), PortScanner.random_color, False)
+                answer_intern = input(scan_intern)
 
-                nice_printing = PortScanner()
-                nice_printing.pring_func()
+                if answer_intern.lower() == "n":
+                    break
 
+                elif answer_intern.lower() == "y":
+                    scan_internal = PortScanner()
+                    scan_internal.scan_all_ip()
 
-                if "Internal_Network.db" in os.listdir():
-                    bp.color("All open ports in your network has been saved to 'Internal_Network.db'",
-                             PortScanner.random_color)
-                else:
-                    bp.color("No IP'Address has an open port", PortScanner.random_color)
+            elif PortScanner.scan_all:
+                scan_internal = PortScanner()
+                scan_internal.scan_all_ip()
 
-                if PortScanner.nice_printing:
-                    print(PortScanner.nice_printing)
-
-                if PortScanner.ssh_port:
-                    hacking = PortScanner()
-                    hacking.hack_ip_ssh(PortScanner.ssh_port)
-
-                bp.color("THANK YOU FOR USING PYTHEAS22", PortScanner.random_color)
-                quit()
 
         while True:
             try:
