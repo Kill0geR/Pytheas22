@@ -66,6 +66,7 @@ class PortScanner:
     hostnames = {}
     hostname = None
     open_ports = []
+    nice_printing = []
 
     def __init__(self):
         self.headers = None
@@ -225,7 +226,7 @@ class PortScanner:
         else:
             bp.color(
                 "To specify the range you simply write 'number1-number2'. "
-                "Number 1 should be smaller than number 2\nIf you only want " 
+                "Number 1 should be smaller than number 2\nIf you only want "
                 "to scan one port. Just type one number".upper(),
                 PortScanner.random_color)
             str_range = bp.color("What is your range: ", PortScanner.random_color, False)
@@ -400,7 +401,8 @@ class PortScanner:
             while True:
                 all_devices = " ".join(devices)
                 bp.color(f"\nALL DEVICES: {all_devices}\n", PortScanner.random_color)
-                chosen_device = input(bp.color("WHICH DEVICE DO YOU WANT TO RUN YOUR SPOOF ON?: ", PortScanner.random_color, False))
+                chosen_device = input(
+                    bp.color("WHICH DEVICE DO YOU WANT TO RUN YOUR SPOOF ON?: ", PortScanner.random_color, False))
                 if chosen_device in devices:
                     PortScanner.change_file("router.sh", router, target, chosen_device)
                     PortScanner.change_file("target.sh", target, router, chosen_device)
@@ -419,7 +421,6 @@ class PortScanner:
             print("YOU ARE NOT CONNECTED WITH THE INTERNET")
             print("THANK YOU FOR USING PYTHEAS22")
             sys.exit()
-
 
     def arp_spoof(self):
         self.ip = None
@@ -567,15 +568,26 @@ class PortScanner:
                     print(counter, end="")
                     scan = PortScanner()
                     scan.start_scanning(PortScanner.well_known_ports, every_port, print_text=False,
-                                               ssh=True, scan_internal_ip=True)
+                                        ssh=True, scan_internal_ip=True)
                     time.sleep(0.5)
                 end = time.perf_counter()
-                seconds = round(end-start, 2)
-                bp.color(f"IT TOOK PYTEASS22 {seconds} SECONDS TO SCAN {len(all_intern_ip)} IP's WITH {len(PortScanner.well_known_ports)} Ports", PortScanner.random_color)
+                seconds = round(end - start, 2)
+                bp.color(
+                    f"IT TOOK PYTEASS22 {seconds} SECONDS TO SCAN {len(all_intern_ip)} IP's WITH {len(PortScanner.well_known_ports)} Ports",
+                    PortScanner.random_color)
 
-                if PortScanner.ssh_port:
-                    hacking = PortScanner()
-                    hacking.hack_ip_ssh(PortScanner.ssh_port)
+                if PortScanner.nice_printing:
+                    idx = 0
+                    for ip, port_lst in PortScanner.nice_printing:
+                        idx += 1
+                        print("".join("_" for _ in range(50)))
+                        bp.color(f"[{idx}] {ip} open ports\n", PortScanner.random_color)
+                        for each in port_lst:
+                            bp.color(each, PortScanner.random_color)
+                            print()
+                        print("".join("_" for _ in range(50)))
+                        print(f"\n\n")
+
 
                 if "Internal_Network.db" in os.listdir():
                     bp.color("All open ports in your network has been saved to 'Internal_Network.db'",
@@ -583,7 +595,14 @@ class PortScanner:
                 else:
                     bp.color("No IP'Address has an open port", PortScanner.random_color)
 
-                bp.color("THANK YOU FOR USING PYTHEAS22", PortScanner.random_color )
+                if PortScanner.nice_printing:
+                    print(PortScanner.nice_printing)
+
+                if PortScanner.ssh_port:
+                    hacking = PortScanner()
+                    hacking.hack_ip_ssh(PortScanner.ssh_port)
+
+                bp.color("THANK YOU FOR USING PYTHEAS22", PortScanner.random_color)
                 quit()
 
         while True:
@@ -689,10 +708,10 @@ class PortScanner:
                 pass
         except ConnectionRefusedError:
             pass
-               
+
         except OSError:
-                pass
-               
+            pass
+
     def start_scanning(self, port_lst, this_ip, print_text=True, country=None, ssh=False, scan_internal_ip=False):
         original = this_ip
         if "http" in this_ip:
@@ -765,6 +784,7 @@ class PortScanner:
                 print("SET ssh_bruteforce TO TRUE IF YOU WANT TO BRUTEFORCE THAT IP-ADDRESS")
 
             if scan_internal_ip:
+                PortScanner.nice_printing.append((this_ip, [f"{print_port}: {port_data.check_ports(print_port, this_ip)}" for print_port in self.open_ports]))
                 PortScanner.add_to_db_intern(this_ip, "".join(str(self.open_ports)))
                 PortScanner.open_ports = []
 
@@ -841,14 +861,17 @@ class PortScanner:
                                        PortScanner.random_color, False)
                     print(counter, end="")
                     self.start_scanning(all_lst, every_ip, print_text=False,
-                                               country=answer.upper(), ssh=True)
+                                        country=answer.upper(), ssh=True)
                 os.chdir("..")
                 end = time.perf_counter()
-                seconds = round(end-start, 2)
-                if len(all_lst) == 1: port = "Port"
-                else: port = "ports"
+                seconds = round(end - start, 2)
+                if len(all_lst) == 1:
+                    port = "Port"
+                else:
+                    port = "ports"
 
-                print(f"\nIT TOOK PYTEASS22 {seconds} SECONDS TO SCAN {len(get_all_ports)} IP's WITH {len(all_lst)} {port}")
+                print(
+                    f"\nIT TOOK PYTEASS22 {seconds} SECONDS TO SCAN {len(get_all_ports)} IP's WITH {len(all_lst)} {port}")
                 if self.ssh_port:
                     self.hack_ip_ssh(self.ssh_port)
                 if self.check_open_port:
@@ -888,7 +911,8 @@ class PortScanner:
                     quest = input(multiple)
 
                     if quest.lower() == "n":
-                        ask_arp = bp.color("Do you want to Arp Spoof someone on your network [y/n]: ".upper(), PortScanner.random_color, False)
+                        ask_arp = bp.color("Do you want to Arp Spoof someone on your network [y/n]: ".upper(),
+                                           PortScanner.random_color, False)
                         asking_arp = input(ask_arp)
                         if asking_arp.lower() == "y":
                             self.arp_spoof()
