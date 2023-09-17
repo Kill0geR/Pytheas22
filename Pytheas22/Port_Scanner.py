@@ -572,29 +572,22 @@ class PortScanner:
                     time.sleep(0.5)
                 end = time.perf_counter()
                 seconds = round(end - start, 2)
-
-                if PortScanner.nice_printing:
-                    idx = 0
-                    for ip, port_lst in PortScanner.nice_printing:
-                        idx += 1
-                        print("".join("_" for _ in range(200)))
-                        bp.color(f"[{idx}] {ip} open ports\n", PortScanner.random_color)
-                        for checking, each in enumerate(port_lst):
-                            bp.color(each, PortScanner.random_color)
-                            if checking != port_lst.index(port_lst[-1]):
-                                print()
-                        print("".join("_" for _ in range(200)))
-                        print(f"\n\n")
-
-
                 bp.color(
                     f"IT TOOK PYTEASS22 {seconds} SECONDS TO SCAN {len(all_intern_ip)} IP's WITH {len(PortScanner.well_known_ports)} Ports",
                     PortScanner.random_color)
+
+                nice_printing = PortScanner()
+                nice_printing.pring_func()
+
+
                 if "Internal_Network.db" in os.listdir():
                     bp.color("All open ports in your network has been saved to 'Internal_Network.db'",
                              PortScanner.random_color)
                 else:
                     bp.color("No IP'Address has an open port", PortScanner.random_color)
+
+                if PortScanner.nice_printing:
+                    print(PortScanner.nice_printing)
 
                 if PortScanner.ssh_port:
                     hacking = PortScanner()
@@ -710,6 +703,21 @@ class PortScanner:
         except OSError:
             pass
 
+    @staticmethod
+    def print_func():
+        if PortScanner.nice_printing:
+            idx = 0
+            for ip, port_lst in PortScanner.nice_printing:
+                idx += 1
+                print("".join("_" for _ in range(50)))
+                bp.color(f"[{idx}] {ip} open ports\n", PortScanner.random_color)
+                for checking, each in enumerate(port_lst):
+                    bp.color(each, PortScanner.random_color)
+                    if checking != port_lst.index(port_lst[-1]):
+                        print()
+                print("".join("_" for _ in range(50)))
+                print(f"\n\n")
+
     def start_scanning(self, port_lst, this_ip, print_text=True, country=None, ssh=False, scan_internal_ip=False):
         original = this_ip
         if "http" in this_ip:
@@ -744,7 +752,7 @@ class PortScanner:
             thread.join()
 
         end = time.perf_counter()
-        print(f"IT TOOK AROUND {round(end - start_time, 2)} SECONDS TO FINISH SCANNING PORTS OF THE IP {this_ip}")
+        print(f"IT TOOK AROUND {round(end - start_time, 2)} SECONDS TO FINISH SCANNING PORTS")
 
         if PortScanner.is_web:
             output = subprocess.run(["nslookup", this_ip], capture_output=True)
@@ -772,6 +780,9 @@ class PortScanner:
                 bp.ui.list(this_lst, f"ALL OPEN PORTS FOR {this_ip}")
 
             if country is not None:
+                PortScanner.nice_printing.append((this_ip,
+                                                  [f"{print_port}: {port_data.check_ports(print_port, this_ip)}" for
+                                                   print_port in self.open_ports]))
                 PortScanner.add_to_db(self.country_name, this_ip, "".join(str(self.open_ports)), name=country)
                 PortScanner.open_ports = []
 
@@ -782,7 +793,9 @@ class PortScanner:
                 print("SET ssh_bruteforce TO TRUE IF YOU WANT TO BRUTEFORCE THAT IP-ADDRESS")
 
             if scan_internal_ip:
-                PortScanner.nice_printing.append((this_ip, [f"{print_port}: {port_data.check_ports(print_port, this_ip)}" for print_port in self.open_ports]))
+                PortScanner.nice_printing.append((this_ip,
+                                                  [f"{print_port}: {port_data.check_ports(print_port, this_ip)}" for
+                                                   print_port in self.open_ports]))
                 PortScanner.add_to_db_intern(this_ip, "".join(str(self.open_ports)))
                 PortScanner.open_ports = []
 
@@ -867,6 +880,9 @@ class PortScanner:
                     port = "Port"
                 else:
                     port = "ports"
+
+                nice_printing = PortScanner()
+                nice_printing.print_func()
 
                 print(
                     f"\nIT TOOK PYTEASS22 {seconds} SECONDS TO SCAN {len(get_all_ports)} IP's WITH {len(all_lst)} {port}")
