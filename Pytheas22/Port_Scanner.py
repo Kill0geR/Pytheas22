@@ -722,7 +722,7 @@ class PortScanner:
             idx = 0
             for ip, port_lst in PortScanner.nice_printing:
                 idx += 1
-                print("".join("_" for _ in range(50)))
+                print("".join(" _ " for _ in range(50)))
                 bp.color(f"[{idx}] {ip} open ports\n", PortScanner.random_color)
                 for checking, each in enumerate(port_lst):
                     bp.color(each, PortScanner.random_color)
