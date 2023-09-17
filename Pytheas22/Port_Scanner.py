@@ -572,24 +572,24 @@ class PortScanner:
                     time.sleep(0.5)
                 end = time.perf_counter()
                 seconds = round(end - start, 2)
-                bp.color(
-                    f"IT TOOK PYTEASS22 {seconds} SECONDS TO SCAN {len(all_intern_ip)} IP's WITH {len(PortScanner.well_known_ports)} Ports",
-                    PortScanner.random_color)
 
                 if PortScanner.nice_printing:
                     idx = 0
                     for ip, port_lst in PortScanner.nice_printing:
                         idx += 1
-                        print("".join("_" for _ in range(50)))
+                        print("".join("_" for _ in range(200)))
                         bp.color(f"[{idx}] {ip} open ports\n", PortScanner.random_color)
                         for checking, each in enumerate(port_lst):
                             bp.color(each, PortScanner.random_color)
                             if checking != port_lst.index(port_lst[-1]):
                                 print()
-                        print("".join("_" for _ in range(50)))
+                        print("".join("_" for _ in range(200)))
                         print(f"\n\n")
 
 
+                bp.color(
+                    f"IT TOOK PYTEASS22 {seconds} SECONDS TO SCAN {len(all_intern_ip)} IP's WITH {len(PortScanner.well_known_ports)} Ports",
+                    PortScanner.random_color)
                 if "Internal_Network.db" in os.listdir():
                     bp.color("All open ports in your network has been saved to 'Internal_Network.db'",
                              PortScanner.random_color)
