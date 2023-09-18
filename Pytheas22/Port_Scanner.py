@@ -15,7 +15,7 @@ import colorama
 import logging
 from logging import NullHandler
 from paramiko import SSHClient, AutoAddPolicy, AuthenticationException, ssh_exception
-from Pytheas22 import port_data
+from port_data import check_ports
 import sys
 import csv
 import ipaddress
@@ -788,14 +788,14 @@ class PortScanner:
         if self.open_ports:
             if print_text:
                 this_lst = [
-                    bp.color(f"{this_ip} has port {each_port} opened | {port_data.check_ports(each_port, this_ip)}",
+                    bp.color(f"{this_ip} has port {each_port} opened | {check_ports(each_port, this_ip)}",
                              PortScanner.random_color, False) for
                     each_port in self.open_ports]
                 bp.ui.list(this_lst, f"ALL OPEN PORTS FOR {this_ip}")
 
             if country is not None:
                 PortScanner.nice_printing.append((this_ip,
-                                                  [f"{print_port}: {port_data.check_ports(print_port, this_ip)}" for
+                                                  [f"{print_port}: {check_ports(print_port, this_ip)}" for
                                                    print_port in self.open_ports]))
                 PortScanner.add_to_db(self.country_name, this_ip, "".join(str(self.open_ports)), name=country)
                 PortScanner.open_ports = []
@@ -808,7 +808,7 @@ class PortScanner:
 
             if scan_internal_ip:
                 PortScanner.nice_printing.append((this_ip,
-                                                  [f"{print_port}: {port_data.check_ports(print_port, this_ip)}" for
+                                                  [f"{print_port}: {check_ports(print_port, this_ip)}" for
                                                    print_port in self.open_ports]))
                 PortScanner.add_to_db_intern(this_ip, "".join(str(self.open_ports)))
                 PortScanner.open_ports = []
