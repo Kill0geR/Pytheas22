@@ -338,8 +338,9 @@ class PortScanner:
         PortScanner.my_ip_address = valid_ip[-1]
         getlast = PortScanner.my_ip_address.split(".")
         spalten = [f"{'.'.join(getlast[0:3])}.{block_number}" for block_number in range(1, 255)]
-        for all_ip in spalten:
-            t = threading.Thread(target=PortScanner.pinging, args=(PortScanner, all_ip,))
+        for idx, all_ip in enumerate(spalten):
+            ping = PortScanner()
+            t = threading.Thread(target=ping.pinging, args=(all_ip,))
             t.start()
 
         time.sleep(1)
