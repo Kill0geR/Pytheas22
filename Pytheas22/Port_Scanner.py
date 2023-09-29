@@ -157,7 +157,7 @@ class PortScanner:
 
         cur = con.cursor()
         cur.execute('''CREATE TABLE IF NOT EXISTS Ports
-                        (IPAddress PRIMARY KEY, Open Ports)''')
+                        (IPAddress, Open Ports)''')
 
         cur.execute("INSERT OR IGNORE INTO Ports VALUES (?,?)",
                     (ip_address, open_ports))
@@ -169,7 +169,7 @@ class PortScanner:
 
         cur = con.cursor()
         cur.execute('''CREATE TABLE IF NOT EXISTS Ports
-                                (IPAddress PRIMARY KEY, Open Ports, Time)''')
+                                (IPAddress, Open Ports, Time)''')
 
         cur.execute("INSERT OR IGNORE INTO Ports VALUES (?,?,?)",
                     (ip_address, open_ports, time.strftime("%d.%m.%y - %H:%M")))
