@@ -338,9 +338,8 @@ class PortScanner:
         PortScanner.my_ip_address = valid_ip[-1]
         getlast = PortScanner.my_ip_address.split(".")
         spalten = [f"{'.'.join(getlast[0:3])}.{block_number}" for block_number in range(1, 255)]
-        for idx, all_ip in enumerate(spalten):
-            ping = PortScanner()
-            t = threading.Thread(target=ping.pinging, args=(all_ip,))
+        for all_ip in spalten:
+            t = threading.Thread(target=PortScanner.pinging, args=(PortScanner, all_ip,))
             t.start()
 
         time.sleep(1)
@@ -408,8 +407,8 @@ class PortScanner:
                 chosen_device = input(
                     bp.color("WHICH DEVICE DO YOU WANT TO RUN YOUR SPOOF ON?: ", PortScanner.random_color, False))
                 if chosen_device in devices:
-                    PortScanner.change_file("router.sh", target, router, chosen_device)
-                    PortScanner.change_file("target.sh", router, target, chosen_device)
+                    PortScanner.change_file("router.sh", router, target, chosen_device)
+                    PortScanner.change_file("target.sh", target, router, chosen_device)
                     bp.color("\n\nOPEN TWO TERMINALS\n"
                              "RUN 'bash router.sh' ON THE FIRST TERMINAL AND \n"
                              "RUN 'bash target.sh' ON THE SECOND TERMINAL\n"
@@ -549,9 +548,6 @@ class PortScanner:
             time.sleep(0.5)
         end = time.perf_counter()
         seconds = round(end - start, 2)
-        bp.color(
-            f"IT TOOK PYTEASS22 {seconds} SECONDS TO SCAN {len(self.all_intern_ip)} IP's WITH {len(PortScanner.well_known_ports)} Ports",
-            PortScanner.random_color)
 
         nice_printing = PortScanner()
         nice_printing.print_func()
@@ -566,6 +562,9 @@ class PortScanner:
             hacking = PortScanner()
             hacking.hack_ip_ssh(PortScanner.ssh_port)
 
+        bp.color(
+            f"IT TOOK PYTEASS22 {seconds} SECONDS TO SCAN {len(self.all_intern_ip)} IP's WITH {len(PortScanner.well_known_ports)} Ports",
+            PortScanner.random_color)
         bp.color("THANK YOU FOR USING PYTHEAS22", PortScanner.random_color)
         quit()
 
@@ -723,13 +722,13 @@ class PortScanner:
             idx = 0
             for ip, port_lst in PortScanner.nice_printing:
                 idx += 1
-                bp.color("".join("_" for _ in range(50)), PortScanner.random_color)
+                print("".join("_" for _ in range(50)))
                 bp.color(f"[{idx}] {ip} open ports\n", PortScanner.random_color)
                 for checking, each in enumerate(port_lst):
                     bp.color(each, PortScanner.random_color)
                     if checking != port_lst.index(port_lst[-1]):
                         print()
-                bp.color("".join("_" for _ in range(50)), PortScanner.random_color)
+                print("".join("_" for _ in range(50)))
                 print(f"\n\n")
 
     def start_scanning(self, port_lst, this_ip, print_text=True, country=None, ssh=False, scan_internal_ip=False):
@@ -808,7 +807,7 @@ class PortScanner:
 
             if scan_internal_ip:
                 PortScanner.nice_printing.append((this_ip,
-                                                  [f"{print_port}: {check_ports(print_port, this_ip)}" for
+                                                  [f"{print_port}: {port_data.check_ports(print_port, this_ip)}" for
                                                    print_port in self.open_ports]))
                 PortScanner.add_to_db_intern(this_ip, "".join(str(self.open_ports)))
                 PortScanner.open_ports = []
