@@ -70,6 +70,7 @@ class PortScanner:
     all_intern_ip = None
     scan_all = False
     pps = False
+    ipv6 = False
 
     def __init__(self):
         self.headers = None
@@ -513,7 +514,12 @@ class PortScanner:
             ip_name = every_ip[1]
             all_intern_ip.append(every_ip[0])
             try:
-                iphone = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                check_ipv6 = PortScanner()
+                if check_ipv6.ipv6:
+                    iphone = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+                else:
+                    iphone = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
                 iphone.settimeout(0.5)
                 iphone.connect((every_ip[0], 62078))
                 ip_name = "Apple Device"
@@ -687,7 +693,12 @@ class PortScanner:
     def tcp_connect(self, ip, port, print_text):
         bp.color(f"SCANNING PORT: {port}", PortScanner.random_color)
         try:
-            start = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            check_ipv6 = PortScanner
+            if check_ipv6.ipv6:
+                start = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+            else:
+                start = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
             start.settimeout(1)
             try:
                 start.connect((ip, port))
@@ -697,7 +708,7 @@ class PortScanner:
                 if port == 22: self.ssh_port.append(ip)
 
             except socket.gaierror:
-                if not PortScanner.is_web:
+                if not PortScanner.is_web and not PortScanner.ipv6:
                     if print_text:
                         bp.color("THIS IP IS NOT AVAILABLE", PortScanner.random_color)
                 else:
@@ -740,11 +751,20 @@ class PortScanner:
             PortScanner.is_web = True
 
         else:
-            for each in [*this_ip]:
-                if each in string.ascii_lowercase:
-                    bp.color("PLEASE USE THE FULL LINK. WITH IS CORRESPONDING PROTOCOL (e.g https://google.com)",
-                             PortScanner.random_color)
+            if ":" in this_ip:
+                split_ipv6 = this_ip.split(":")
+                if len(split_ipv6) > 5:
+                    PortScanner.ipv6 = True
+                else:
+                    bp.color("IPV6-ADDRESS IS NOT COMPLETED", PortScanner.random_color)
                     quit()
+
+            else:
+                for each in [*this_ip]:
+                    if each in string.ascii_lowercase:
+                        bp.color("PLEASE USE THE FULL LINK. WITH IS CORRESPONDING PROTOCOL (e.g https://google.com)",
+                                 PortScanner.random_color)
+                        quit()
         print()
         if "http" in original:
             bp.color(f"Scanning the website: ".upper() + f'{original}\n', PortScanner.random_color)
