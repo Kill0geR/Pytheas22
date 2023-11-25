@@ -728,6 +728,35 @@ class PortScanner:
             pass
 
     @staticmethod
+    def get_location_of_ip(ip):
+        if "." in ip:
+            if len(ip.split(".")) == 4:
+                print("\nGetting the potential location of the address")
+                url = f"https://www.geolocation.com/de?ip={ip}#ipresult"
+                data = requests.get(url).text.replace(r"\\t", "").replace(r"\\r", "").split()
+
+                relevant_data = [f"<div><label><strong>{each_data}</strong></label></div>" for each_data in
+                                 ["Land", "Region", "Stadt", "Postleitzahl", "ISP", "Domänenname"]]
+                get_relevant_data = [data.index(rel) for rel in relevant_data if rel in data]
+                information = []
+                for idx in get_relevant_data:
+                    this_lst = []
+                    for every in data[idx + 1:]:
+                        if "</td>" in every:
+                            break
+                        this_lst.append(every)
+                    info = " ".join(this_lst)
+                    for every_item in ["<img", "[", "<a"]:
+                        info = info.split(every_item)[0]
+
+                    information.append(info.strip())
+                return (f"\n\nTHE IP IS FROM {information[0]}\n\n"
+                        f"REGION: {information[1]}\nCITY: {information[2]}\n"
+                        f"POSTCODE: {information[3]}\nISP (Internet Service Provider): {information[4]}\n"
+                        f"Domain: {information[5]}\n\n")
+        return "\n\nNo location found\n\n"
+
+    @staticmethod
     def print_func():
         if PortScanner.nice_printing:
             idx = 0
@@ -792,16 +821,19 @@ class PortScanner:
             new_data = str(output).split("\\n")
             all_addresses = [addr.split(":")[1].replace(addr.split(":")[1][0], "") for addr in new_data if
                              "Address" in addr if "." in addr if "#" not in addr]
+            location = PortScanner()
             if len(all_addresses) == 1:
                 if print_text:
-                    bp.color(f"Website {this_ip} has 1 address", PortScanner.random_color)
+                    location = PortScanner()
+                    text = location.get_location_of_ip(all_addresses[0])
+                    bp.color(f"Website {this_ip} has 1 address {text}", PortScanner.random_color)
                     bp.color(f"{all_addresses[0]} is the ip address of {this_ip}\n", PortScanner.random_color)
 
             else:
                 if print_text:
                     bp.color(f"Website {this_ip} has {len(all_addresses)} addresses\n", PortScanner.random_color)
                     for idx, each_addr in enumerate(all_addresses): bp.color(
-                        f"[{idx + 1}] {each_addr} is one of the addresses of {this_ip}", PortScanner.random_color)
+                        f"[{idx + 1}] {each_addr} is one of the addresses of {this_ip} {location.get_location_of_ip(each_addr)}", PortScanner.random_color)
 
         print()
         if self.open_ports:
