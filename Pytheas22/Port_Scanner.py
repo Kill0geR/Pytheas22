@@ -71,6 +71,7 @@ class PortScanner:
     scan_all = False
     pps = False
     ipv6 = False
+    public_ip = False
 
     def __init__(self):
         self.headers = None
@@ -729,10 +730,13 @@ class PortScanner:
 
     @staticmethod
     def get_location_of_ip(ip):
-        if "." in ip:
-            if len(ip.split(".")) == 4:
+        if "." in ip or ":" in ip:
+            if "." in ip: url = f"https://www.geolocation.com/de?ip={ip}#ipresult"
+            else:
+                new_url = '%20'.join(ip.split(":"))
+                url = f"https://www.geolocation.com/de?ip={new_url}#ipresult"
+            if len(ip.split(".")) == 4 or len(ip.split(":")) > 5:
                 print("\nGetting the potential location of the address")
-                url = f"https://www.geolocation.com/de?ip={ip}#ipresult"
                 data = requests.get(url).text.replace(r"\\t", "").replace(r"\\r", "").split()
 
                 relevant_data = [f"<div><label><strong>{each_data}</strong></label></div>" for each_data in
@@ -753,7 +757,7 @@ class PortScanner:
                 return (f"\n\nTHE IP IS FROM {information[0]}\n\n"
                         f"REGION: {information[1]}\nCITY: {information[2]}\n"
                         f"POSTCODE: {information[3]}\nISP (Internet Service Provider): {information[4]}\n"
-                        f"Domain: {information[5]}\n\n")
+                        f"Domain: {information[5]}\n")
         return "\n\nNo location found\n\n"
 
     @staticmethod
@@ -794,7 +798,10 @@ class PortScanner:
                         bp.color("PLEASE USE THE FULL LINK. WITH IS CORRESPONDING PROTOCOL (e.g https://google.com)",
                                  PortScanner.random_color)
                         quit()
-        print()
+        if not PortScanner.is_web and not PortScanner.ipv6:
+            if this_ip.split(".")[0] not in ["10", "127", "172", "192"]:
+                PortScanner.public_ip = True
+
         if "http" in original:
             bp.color(f"Scanning the website: ".upper() + f'{original}\n', PortScanner.random_color)
         else:
@@ -815,13 +822,12 @@ class PortScanner:
 
         end = time.perf_counter()
         print(f"IT TOOK AROUND {round(end - start_time, 2)} SECONDS TO FINISH SCANNING PORTS")
-
+        location = PortScanner()
         if PortScanner.is_web:
             output = subprocess.run(["nslookup", this_ip], capture_output=True)
             new_data = str(output).split("\\n")
             all_addresses = [addr.split(":")[1].replace(addr.split(":")[1][0], "") for addr in new_data if
                              "Address" in addr if "." in addr if "#" not in addr]
-            location = PortScanner()
             if len(all_addresses) == 1:
                 if print_text:
                     location = PortScanner()
@@ -834,6 +840,9 @@ class PortScanner:
                     bp.color(f"Website {this_ip} has {len(all_addresses)} addresses\n", PortScanner.random_color)
                     for idx, each_addr in enumerate(all_addresses): bp.color(
                         f"[{idx + 1}] {each_addr} is one of the addresses of {this_ip} {location.get_location_of_ip(each_addr)}", PortScanner.random_color)
+
+        if PortScanner.ipv6 or PortScanner.public_ip:
+            bp.color(location.get_location_of_ip(this_ip), PortScanner.random_color)
 
         print()
         if self.open_ports:
@@ -968,7 +977,6 @@ class PortScanner:
                 bp.color(string_port, PortScanner.random_color)
                 bp.color("\nThis program must be run in root!!!!\n".upper(), "red")
                 quit()
-
         bp.color(string_port, PortScanner.random_color)
         check_website = 0
 
