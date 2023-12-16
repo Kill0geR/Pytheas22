@@ -38,7 +38,7 @@ Install requirements:
 
 Install nmap (kali linux has it already installed (not needed in Windows))
 
-`sudo apt-get install nmap`
+`sudo apt-get install netdiscover`
 
 Install nslookup (kali linux has it already installed (not needed in Windows))
 
