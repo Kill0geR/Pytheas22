@@ -68,7 +68,6 @@ Additional
 
 * DO NOT USE THIS TO ATTACK SOMEONE FOREIGN. I BUILD IT FOR EDUCATIONAL PURPOSES.
 
-
 Change Log
 ==========
 
@@ -96,7 +95,7 @@ Change Log
 --------------------
 - 15x faster port scanning
 
-0.0.5 (10/11/2023)
+0.0.5 (10/09/2023)
 --------------------
 - Better Code
 - New Arp Poisoning Feature (only on Linux)
@@ -104,8 +103,28 @@ Change Log
 - Shows Seconds over run seconds when scanning lots of ip's
 - Multithreading Error fixed
 
-0.0.6 (12/12/2023)
+0.0.6 (17/09/2023)
+------------------
+- New Printing Modell
+- New Python_Port_Scanner.py Script
+
+0.0.7 (12/12/2023)
 -------------------
 - IPv6 port scanning
 - new terminal look
 - Getting the exact location of the target's IP
+
+0.0.7.1 (15/12/2023)
+-------------------
+- Download fix
+
+0.0.7.2 (15/12/2023)
+--------------------
+- Error fix
+
+0.0.8 (16/12/2023)
+--------------------
+- New Portscanning Model in Linux
+- New Hostname features in Linux
+- Port scanning error fixed in Linux
+
