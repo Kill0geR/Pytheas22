@@ -477,34 +477,19 @@ class PortScanner:
         threading_wait.start()
         host_ip = PortScanner.get_ip()
         PortScanner.my_ip_address = host_ip[1][0][0]
-        all_data = subprocess.run(["nmap", "-sn", f"{host_ip[0]}/{host_ip[1][0][1]}"], capture_output=True)
+        all_data = subprocess.run(["netdiscover", "-r", "192.168.0.0/24", "-P"], capture_output=True).stdout.decode()
         PortScanner.waiting = True
         time.sleep(0.6)
         PortScanner.waiting = False
-        get_everything = str(all_data).split()
-        all_ips = [(get_everything[idx + 1].replace("\\nHost", ""), get_everything[idx + 2].replace("\\nHost", ""),
-                    get_everything[idx + 8].replace("\\nNmap", "").replace("(", "").replace(")", "")) for idx, ip in
-                   enumerate(get_everything) if ip == "for"]
-        internal_networks = [ips[0] for ips in all_ips if not re.search("[a-zA-Z]", ips[0])]
-        others = [name for name in all_ips if re.search("[a-zA-Z]", name[0])]
+        order_ips = sorted([int(each.split()[0].split(".")[-1]) for each in all_data.split("\n") if re.findall(r"\d+.\d+.\d+.\d+", each)] + [int(str(PortScanner.my_ip_address).split(".")[-1])])
 
-        for every_ip in all_ips:
-            for this_ip in internal_networks:
-                if this_ip == every_ip[0]:
-                    if not re.search("[a-zA-Z]", every_ip[2]):
-                        PortScanner.every_ip_with_name.append((this_ip, "Unknown"))
-                    else:
-                        PortScanner.every_ip_with_name.append((this_ip, every_ip[2]))
+        get_all_hostnames = {each.split()[0]: " ".join(each.split()[4:]) for each in all_data.split("\n") if
+                             re.findall(r"\d+.\d+.\d+.\d+", each)}
 
-        if others:
-            for not_in_lst in others:
-                PortScanner.every_ip_with_name.append(
-                    (not_in_lst[1].replace("(", "").replace(")", ""), not_in_lst[0]))
+        get_all_hostnames[PortScanner.my_ip_address] = "MY IP-ADDRESS"
+        sorted_ips = [(ip, host) for each_number in order_ips for ip, host in get_all_hostnames.items() if
+                      str(each_number) == ip.split(".")[-1]]
 
-        get_only_ips = [ip for ip, host in PortScanner.every_ip_with_name]
-        numbers = sorted([int(each_ip.split(".")[-1]) for each_ip in get_only_ips])
-        sorted_ips = [(ip, host) for num in numbers for ip, host in PortScanner.every_ip_with_name if
-                      int(ip.split(".")[-1]) == num]
         PortScanner.every_ip_with_name = sorted_ips
 
     @staticmethod
@@ -526,8 +511,6 @@ class PortScanner:
                 ip_name = "Apple Device"
             except:
                 pass
-            if every_ip[0] == PortScanner.my_ip_address:
-                ip_name = "MY IP-ADDRESS"
 
             ip_len = f"[{number + 1}]:"
             length = 6 - len(ip_len)
