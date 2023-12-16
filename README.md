@@ -66,8 +66,6 @@ Additional
 
 * Bruteforce list is trained on ip-cameras
 
-* DO NOT USE THIS TO ATTACK SOMEONE FOREIGN. I BUILD IT FOR EDUCATIONAL PURPOSES.
-
 Change Log
 ==========
 
