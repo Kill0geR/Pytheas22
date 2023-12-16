@@ -926,6 +926,11 @@ class PortScanner:
                 continue
 
     def question(self):
+        if sys.platform == "linux":
+            if os.getuid() != 0:
+                bp.color(string_port, PortScanner.random_color)
+                bp.color("\nThis program must be run in root!!!!\n".upper(), "red")
+                quit()
         bp.color(string_port, PortScanner.random_color)
         check_website = 0
 
