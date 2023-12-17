@@ -1,7 +1,6 @@
 import os
 import sys
 import time
-from Pytheas22 import gui_pytheas
 
 
 def install():
@@ -20,7 +19,6 @@ def install():
 
 if sys.platform == "linux":
     if os.getuid() != 0:
-        print(gui_pytheas)
         print("\nThis program must be run in root!!!!\n".upper())
         quit()
 
