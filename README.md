@@ -33,24 +33,11 @@ Change to Pytheas22 directory:
 
 Install requirements:
 
-`pip install -r requirements.txt`
-
-
-Install nmap (kali linux has it already installed (not needed in Windows))
-
-`sudo apt install netdiscover`
-
-Install nslookup (kali linux has it already installed (not needed in Windows))
-
-`sudo apt install dnsutils`
-
-Install dsniff (for arpspoffing)
-`sudo apt install dsniff`
+`python requirements.py`
 
 If finished run the main.py file
 
 `python main.py`
-
 
 It is very easy to use so everything will be explained in main.py
 
