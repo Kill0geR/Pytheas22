@@ -14,7 +14,7 @@ def install():
     os.system("sudo apt install dnsutils")
     print("sudo apt install dsniff")
     os.system("sudo apt install dsniff")
-    print("\n\nFinished\n\n")
+    print("\n\The installation has been successfully installed.\nThank you for using Pytheas22\n\n")
 
 
 if sys.platform == "linux":
