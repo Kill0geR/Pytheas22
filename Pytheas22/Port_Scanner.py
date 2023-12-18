@@ -448,7 +448,7 @@ class PortScanner:
         threading_wait.start()
         host_ip = PortScanner.get_ip()
         PortScanner.my_ip_address = host_ip[1][0][0]
-        all_data = subprocess.run(["netdiscover", "-r", "192.168.0.0/24", "-P"], capture_output=True).stdout.decode()
+        all_data = subprocess.run(["netdiscover", "-r", f"{host_ip[0]}/{host_ip[1][0][1]}", "-P"], capture_output=True).stdout.decode()
         PortScanner.waiting = True
         time.sleep(0.6)
         PortScanner.waiting = False
@@ -931,6 +931,7 @@ class PortScanner:
                 bp.color(string_port, PortScanner.random_color)
                 bp.color("\nThis program must be run in root!!!!\n".upper(), "red")
                 quit()
+
         bp.color(string_port, PortScanner.random_color)
         check_website = 0
 
