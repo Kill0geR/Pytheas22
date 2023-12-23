@@ -380,8 +380,8 @@ class PortScanner:
                 chosen_device = input(
                     bp.color("WHICH DEVICE DO YOU WANT TO RUN YOUR SPOOF ON?: ", PortScanner.random_color, False))
                 if chosen_device in devices:
-                    PortScanner.change_file("/home/potens/Pytheas22/router.sh", router, target, chosen_device)
-                    PortScanner.change_file("/home/potens/Pytheas22/target.sh", target, router, chosen_device)
+                    PortScanner.change_file("router.sh", router, target, chosen_device)
+                    PortScanner.change_file("target.sh", target, router, chosen_device)
                     bp.color("\n\nOPEN TWO TERMINALS\n"
                              "RUN 'bash router.sh' ON THE FIRST TERMINAL AND \n"
                              "RUN 'bash target.sh' ON THE SECOND TERMINAL\n"
