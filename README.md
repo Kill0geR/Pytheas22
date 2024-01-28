@@ -16,12 +16,12 @@ Pytheas22 is recommended to be used in Kali linux but works on every linux distr
 First of all
 ===========
 
-Change to root (in Linux):
+Change to root (on Linux):
 
 `sudo su`
 
 
-Clone my project with (works also in Windows):
+Clone my project with (works also on Windows):
 
 `git clone https://github.com/Kill0geR/Pytheas22`
 
