@@ -29,6 +29,7 @@ def check_ports(open_port, ip):
                      5060: "Session Initiation Protocol (SIP)",
                      5061: "Session Initiation Protocol (SIP) over TLS",
                      5357: "Web Services for Devices (WSDAPI)",
+                     7680: "TCP port 760 is used by WUDO (Windows Update Delivery Optimization) in Windows LANs.",
                      8001: f"Streaming \nThere might be a website: http://{ip}:8001",
                      8002: f"Cisco Systems Unified Call Manager Intercluster\nThere might be a website: http://{ip}:8002",
                      8080: f"HTTP alternativ\nThere might be a website: http://{ip}:8080",
