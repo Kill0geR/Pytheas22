@@ -496,7 +496,6 @@ class PortScanner:
             just_ips.append(every_ip[0])
         return all_intern_ip, just_ips
 
-
     def scan_all_ip(self):
         start = time.perf_counter()
         for idx, every_port in enumerate(self.all_intern_ip):
@@ -682,14 +681,16 @@ class PortScanner:
         except OSError:
             pass
 
-    @staticmethod
-    def get_location_of_ip(ip):
-        if "." in ip or ":" in ip:
-            if "." in ip: url = f"https://www.geolocation.com/de?ip={ip}#ipresult"
+    def get_location_of_ip(self, ip):
+        self.ip = ip
+
+        if "." in self.ip or ":" in self.ip:
+            if "." in self.ip: url = f"https://www.geolocation.com/de?ip={self.ip}#ipresult"
             else:
-                new_url = '%20'.join(ip.split(":"))
+                new_url = '%20'.join(self.ip.split(":"))
                 url = f"https://www.geolocation.com/de?ip={new_url}#ipresult"
-            if len(ip.split(".")) == 4 or len(ip.split(":")) > 5:
+
+            if len(self.ip.split(".")) == 4 or len(self.ip.split(":")) > 5:
                 print("\nGetting the potential location of the address")
                 data = requests.get(url).text.replace(r"\\t", "").replace(r"\\r", "").split()
 
@@ -738,6 +739,9 @@ class PortScanner:
             PortScanner.is_web = True
 
         else:
+            if "-" in this_ip:
+                this_ip = ':'.join(this_ip.split("-"))
+
             if ":" in this_ip:
                 split_ipv6 = this_ip.split(":")
                 if len(split_ipv6) > 5:
@@ -753,7 +757,7 @@ class PortScanner:
                                  PortScanner.random_color)
                         quit()
         if not PortScanner.is_web and not PortScanner.ipv6:
-            if this_ip.split(".")[0] not in ["10", "127", "172", "192"]:
+            if f"{this_ip.split('.')[0]}.{this_ip.split('.')[1]}" not in ["10.0", "172.17", "192.168", "127.0"]:
                 PortScanner.public_ip = True
 
         if "http" in original:
@@ -931,7 +935,6 @@ class PortScanner:
                 bp.color(string_port, PortScanner.random_color)
                 bp.color("\nThis program must be run in root!!!!\n".upper(), "red")
                 quit()
-
         bp.color(string_port, PortScanner.random_color)
         check_website = 0
 
