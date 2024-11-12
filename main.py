@@ -1,5 +1,4 @@
-from Pytheas22 import Port_Scanner
+from Pytheas22 import PortScanner
 
-Port_Scanner.PortScanner.question(Port_Scanner.PortScanner)
-
-
+scan = PortScanner()
+scan.question()

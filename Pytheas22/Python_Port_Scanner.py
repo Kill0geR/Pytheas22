@@ -1,5 +1,3 @@
-import time
-
 from .Port_Scanner import PortScanner
 import BetterPrinting as bp
 
@@ -44,6 +42,7 @@ class PythonPortScanner(PythonPortScannerList):
         self.start_scanning(self.every_lst, ip, ssh=self.ssh_bruteforce)
 
     def scan_internal_network(self):
+        PortScanner.pps = True
         self.print_gui()
         self.make_lst()
         get_ip = PortScanner.internal_network()

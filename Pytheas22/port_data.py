@@ -3,6 +3,7 @@ import subprocess
 
 
 def check_ports(open_port, ip):
+    data = ""
     all_port_data = {20: "File Transfer Protocol (FTP) data transfer",
                      21: "File Transfer Protocol (FTP) control (command)",
                      22: f"Secure Shell (SSH) secure logins, file transfers (scp, sftp) and port forwarding. \n To Bruteforce the target set ssh_bruteforce Parameter to True",
@@ -28,27 +29,32 @@ def check_ports(open_port, ip):
                      5060: "Session Initiation Protocol (SIP)",
                      5061: "Session Initiation Protocol (SIP) over TLS",
                      5357: "Web Services for Devices (WSDAPI)",
+                     7680: "TCP port 760 is used by WUDO (Windows Update Delivery Optimization) in Windows LANs.",
                      8001: f"Streaming \nThere might be a website: http://{ip}:8001",
                      8002: f"Cisco Systems Unified Call Manager Intercluster\nThere might be a website: http://{ip}:8002",
                      8080: f"HTTP alternativ\nThere might be a website: http://{ip}:8080",
                      9080: "Microsoft Groove Software",
                      9999: "Communication",
                      62078: "Lightning Connector Apple Device"}
-    data = all_port_data[open_port]
-    if open_port == 53:
-        if re.findall(r"\d+.\d+.\d+.\d+", ip):
-            all_data = subprocess.run(["nslookup", ip], capture_output=True)
-            split_data = str(all_data).split("\\n")
-            name = ""
-            for each in split_data[0][::-1]:
-                if "=" == each:
-                    break
-                name += each
 
-            name = name[::-1]
-            lst_name = [*name]
-            lst_name[0] = ""
-            name = "".join(lst_name)
-            data += f"\nThis is the website: '{name}' of this IP"
+    if open_port in all_port_data:
+        data = all_port_data[open_port]
+        if open_port == 53:
+            if re.findall(r"\d+.\d+.\d+.\d+", ip):
+                all_data = subprocess.run(["nslookup", ip], capture_output=True)
+                split_data = str(all_data).split("\\n")
+                name = ""
+                for each in split_data[0][::-1]:
+                    if "=" == each:
+                        break
+                    name += each
+
+                name = name[::-1]
+                lst_name = [*name]
+                lst_name[0] = ""
+                name = "".join(lst_name)
+                data += f"\nThis is the website: '{name}' of this IP"
+    else:
+        data += f"There might be a website: http://{ip}:{open_port}"
 
     return data

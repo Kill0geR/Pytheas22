@@ -1,4 +1,0 @@
-BetterPrinting
-requests
-colorama
-paramiko

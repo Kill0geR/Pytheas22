@@ -1,0 +1,39 @@
+Change Log
+==========
+
+0.0.1 (01/06/2023)
+-----------------
+- First Release
+
+0.0.2 (05/06/2023)
+-----------------
+- New Internal database
+- Files on GitHub now work on windows
+- "question" function now also works on windows
+
+0.0.2.1 (10/06/2023)
+--------------------
+- (small fixes)
+
+0.0.3 (28/07/2023)
+--------------------
+- prints hostnames of internal network
+- new printing system
+- more efficient port information
+
+0.0.4 (01/08/2023)
+--------------------
+- 15x faster port scanning
+
+0.0.5 (10/09/2023)
+--------------------
+- Better Code
+- New Arp Poisoning Feature (only on Linux)
+- Better Port scanning on Windows
+- Shows Seconds over run seconds when scanning lots of ip's
+- Multithreading Error fixed
+
+0.0.6 (17/09/2023)
+--------------------
+- New Printing Modell
+- New Python_Port_Scanner.py Script
