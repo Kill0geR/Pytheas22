@@ -246,19 +246,17 @@ class PortScanner:
 
     def manufacture(self, mac):
         data = requests.get(f"https://maclookup.app/search/result?mac={mac}")
-        split_data = data.text.split("\n")
+        split_data = data.text.split()
 
-        if "No assignment is found for this MAC" not in data.text:
-            get_action = [every_action for every_action in split_data if
-                          '<div class="col-md-12" style="padding-bottom: 1em">' in every_action]
-            get_name = get_action[0].split("h2")
-            second = get_name[1]
-            this_name = second.split("<")
-            real_name = this_name[0].replace(">", "")
+        if 'content="Vendor/Company:' in split_data:
+            first_idx = split_data.index('content="Vendor/Company:')
+            second_idx = split_data.index('MAC')
+            mac_name = " ".join(split_data[first_idx + 1:second_idx]).strip(",")
+
             if self.hostname is not None:
-                return f"{real_name} (hostname: {self.hostname})"
+                return f"{mac_name} (hostname: {self.hostname})"
             else:
-                return real_name
+                return mac_name
 
         else:
             if self.hostname is not None:
@@ -291,6 +289,7 @@ class PortScanner:
 
 
     def get_user_ip(self):
+        all_my_ips = []
         cmd = subprocess.run(["ipconfig", "/all"], capture_output=True)
         split_cmd = str(cmd).split()
 
@@ -303,16 +302,15 @@ class PortScanner:
         for every_ip in all_ips:
             try:
                 ipaddress.ip_address(every_ip)
-                if every_ip.split(".")[-1] not in ["255"]:
-                    valid_ip.append(every_ip)
+                network_ip = ".".join(every_ip.split(".")[:3]) + ".0"
+                if every_ip.split(".")[-1] not in ["255"] and network_ip not in valid_ip:
+                    valid_ip.append(network_ip)
+                    all_my_ips.append(every_ip)
             except:
                 continue
 
         for idx, each in enumerate(valid_ip):
-            lst = each.split(".")
-            lst[-1] = "0"
-            lst = ".".join(lst)
-            bp.color(f"[{idx + 1}]        {lst}", PortScanner.random_color)
+            bp.color(f"[{idx + 1}]        {each}", PortScanner.random_color)
 
         get_chosen_ip = bp.color("Which Network do you want to scan?: ",
                                  PortScanner.random_color, False)
@@ -320,7 +318,7 @@ class PortScanner:
         if get_ip > len(valid_ip):
             bp.color("This is not in the list")
         else:
-            return valid_ip[get_ip-1]
+            return valid_ip[get_ip-1], all_my_ips
 
     def internal_windows(self, user_ip):
         PortScanner.my_ip_address = user_ip
@@ -567,10 +565,12 @@ class PortScanner:
 
         elif sys.platform == "win32" or sys.platform == "windows" or sys.platform == "win64":
             windows = PortScanner()
-            get_ip = windows.get_user_ip()
+            get_ip, my_ips = windows.get_user_ip()
+            user_ip = [each_ip for each_ip in my_ips if each_ip.split(".")[:3] == get_ip.split(".")[:3]][0]
+
             win_threading_wait = threading.Thread(target=PortScanner.wait)
             win_threading_wait.start()
-            PortScanner.every_ip_with_name = windows.internal_windows(get_ip)
+            PortScanner.every_ip_with_name = windows.internal_windows(user_ip)
             time.sleep(0.5)
             PortScanner.waiting = True
             time.sleep(0.5)
