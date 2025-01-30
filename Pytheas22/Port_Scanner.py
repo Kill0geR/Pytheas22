@@ -150,19 +150,35 @@ class PortScanner:
 
     @classmethod
     def get_ip(cls):
-        open_ports = subprocess.run(["ip", "a"], capture_output=True)
-        everything = str(open_ports).split()
-        ipaddress = [everything[ip + 1] for ip, inet in enumerate(everything) if inet == "inet"]
+        print()
+        all_cmd = subprocess.run(["ip", "a"], capture_output=True).stdout.decode().split()
 
-        for each_ip in ipaddress:
-            real_ip = each_ip.split("/")
-            if real_ip[0] != "127.0.0.1":
-                cls.ip_subnett.append((real_ip[0], real_ip[1]))
+        all_ips = [cls.ip_subnett.append((all_cmd[idx + 1].split("/")[0], all_cmd[idx + 1].split("/")[1])) if
+                   all_cmd[idx + 1].split("/")[0] != "127.0.0.1" else "" for idx, ip in enumerate(all_cmd) if
+                   ip == "inet"][1:]
 
-        host = cls.ip_subnett[0][0].split(".")
+
+        for idx, each in enumerate(cls.ip_subnett):
+            just_ip = each[0].split(".")
+            just_ip[-1] = "0"
+            just_ip = ".".join(just_ip)
+            bp.color(f"[{idx + 1}]        {just_ip}", PortScanner.random_color)
+
+        get_chosen_ip = bp.color("Which Network do you want to scan?: ",
+                                 PortScanner.random_color, False)
+
+        get_ip = int(input(get_chosen_ip))
+
+        host = cls.ip_subnett[get_ip-1][0].split(".")
         host[-1] = "0"
         host_ip = ".".join(host)
-        return host_ip, cls.ip_subnett
+        if get_ip > len(all_ips) or get_ip < 0:
+            bp.color("This is not in the list")
+
+        else:
+            return host_ip, cls.ip_subnett[get_ip-1]
+
+
 
     def counter(self, country):
         res = requests.get(
@@ -416,10 +432,10 @@ class PortScanner:
             print("SORRY THIS ONLY WORKS ON LINUX. YOU CAN USE A VIRTUAL MACHINE TO RUN THIS")
             sys.exit()
         else:
-            spoof_addr_question = bp.color("Do you want to spoof an own address or someone from your network? y/n: ",
+            spoof_addr_question = bp.color("Do you want to spoof an own address or someone from your network? n (network) / o (own Address): ",
                                    PortScanner.random_color, False)
             spoof_addr = input(spoof_addr_question)
-            if spoof_addr == "y":
+            if spoof_addr == "o":
                 target_address_question = bp.color("Enter the target Address: ",
                                       PortScanner.random_color, False)
                 target_address = input(target_address_question)
@@ -430,7 +446,7 @@ class PortScanner:
 
                 spoof = PortScanner()
                 spoof.__spoof_ip(gateway_address, target_address)
-            else:
+            elif spoof_addr == "n":
                 self.linux_lst()
                 self.print_internal()
 
@@ -469,13 +485,16 @@ class PortScanner:
                         print("PLEASE WRITE A NUMBER THAT IS ABOVE YOU")
                         continue
 
+            else:
+                print("THIS IST NOT WHAT HAS BEEN ASKED!")
+
     @staticmethod
     def linux_lst():
+        host_ip = PortScanner.get_ip()
         threading_wait = threading.Thread(target=PortScanner.wait)
         threading_wait.start()
-        host_ip = PortScanner.get_ip()
-        PortScanner.my_ip_address = host_ip[1][0][0]
-        all_data = subprocess.run(["netdiscover", "-r", f"{host_ip[0]}/{host_ip[1][0][1]}", "-P"], capture_output=True).stdout.decode()
+        PortScanner.my_ip_address = host_ip[1][0]
+        all_data = subprocess.run(["netdiscover", "-r", f"{host_ip[0]}/{host_ip[1][-1]}", "-P"], capture_output=True).stdout.decode()
         PortScanner.waiting = True
         time.sleep(0.6)
         PortScanner.waiting = False
