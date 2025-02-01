@@ -488,26 +488,32 @@ class PortScanner:
             else:
                 print("THIS IST NOT WHAT HAS BEEN ASKED!")
 
-    @staticmethod
-    def linux_lst():
+
+    def linux_lst(self):
         host_ip = PortScanner.get_ip()
         threading_wait = threading.Thread(target=PortScanner.wait)
         threading_wait.start()
         PortScanner.my_ip_address = host_ip[1][0]
         all_data = subprocess.run(["netdiscover", "-r", f"{host_ip[0]}/{host_ip[1][-1]}", "-P"], capture_output=True).stdout.decode()
+
+        all_arp_data = subprocess.run(["arp", "-a"], capture_output=True).stdout.decode().split("\n")[:-1]
+        pattern = r"\((\d+\.\d+\.\d+\.\d+)\)"
+        self.hostnames = {re.findall(pattern, each)[0]:each.split()[0] for each in all_arp_data if each.split()[0] != "?"}
+
         PortScanner.waiting = True
         time.sleep(0.6)
         PortScanner.waiting = False
-        order_ips = sorted([int(each.split()[0].split(".")[-1]) for each in all_data.split("\n") if re.findall(r"\d+.\d+.\d+.\d+", each)] + [int(str(PortScanner.my_ip_address).split(".")[-1])])
+        order_ips = sorted([int(each.split()[0].split(".")[-1]) for each in all_data.split("\n") if re.findall(r"\d+.\d+.\d+.\d+", each)])
 
         get_all_hostnames = {each.split()[0]: " ".join(each.split()[4:]) for each in all_data.split("\n") if
                              re.findall(r"\d+.\d+.\d+.\d+", each)}
 
-        get_all_hostnames[PortScanner.my_ip_address] = "MY IP-ADDRESS"
-        sorted_ips = [(ip, host) for each_number in order_ips for ip, host in get_all_hostnames.items() if
+        sorted_ips = [(ip, f"{host} (hostname: {self.hostnames[ip]})" if ip in self.hostnames else host) for each_number in order_ips for ip, host in get_all_hostnames.items() if
                       str(each_number) == ip.split(".")[-1]]
 
-        PortScanner.every_ip_with_name = sorted_ips
+        sorted_ips.insert(0, (PortScanner.my_ip_address, "MY IP-ADDRESS"))
+
+        return sorted_ips
 
     @staticmethod
     def print_internal():
@@ -580,7 +586,7 @@ class PortScanner:
         bp.color("ALL THE DEVICES IN YOUR NETWORK WILL BE SHOWN SOON", PortScanner.random_color)
         if sys.platform == "linux":
             get_lst = PortScanner()
-            get_lst.linux_lst()
+            PortScanner.every_ip_with_name = get_lst.linux_lst()
 
         elif sys.platform == "win32" or sys.platform == "windows" or sys.platform == "win64":
             windows = PortScanner()
