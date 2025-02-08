@@ -1,7 +1,38 @@
 import os
 import sys
 import time
-from Pytheas22 import gui_pytheas
+
+string_port = """
+
+
+        ***** **                               *                                           
+     ******  ****                      *     **                                            
+    **   *  *  ***                    **     **                                            
+   *    *  *    ***                   **     **                                            
+       *  *      ** **   ****       ******** **                                ****        
+      ** **      **  **    ***  *  ********  **  ***      ***       ****      * **** *     
+      ** **      **  **     ****      **     ** * ***    * ***     * ***  *  **  ****      
+    **** **      *   **      **       **     ***   ***  *   ***   *   ****  ****           
+   * *** **     *    **      **       **     **     ** **    *** **    **     ***          
+      ** *******     **      **       **     **     ** ********  **    **       ***        
+      ** ******      **      **       **     **     ** *******   **    **         ***      
+      ** **          **      **       **     **     ** **        **    **    ****  **      
+      ** **           *********       **     **     ** ****    * **    **   * **** *   n n 
+      ** **             **** ***       **    **     **  *******   ***** **     ****    u u 
+ **   ** **                   ***             **    **   *****     ***   **            m m 
+***   *  *             *****   ***                  *                                  b b 
+ ***    *            ********  **                  *                                   e e 
+  ******            *      ****                   *                                    r r 
+    ***                                          *                                     2 2 
+
+
+
+
+            ~Created by: Kill0geR~
+            WELCOME TO PYTHEAS22
+"""
+
+# Thanks for looking at Pytheas22
 
 
 def install():
@@ -18,10 +49,11 @@ def install():
     print("\n\nFinished\n\n")
 
 
-if sys.platform == "linux":
-    if os.getuid() != 0:
-        print(gui_pytheas)
-        print("\nThis program must be run in root!!!!\n".upper())
-        quit()
+if __name__ == "__main__":
+    if sys.platform == "linux":
+        if os.getuid() != 0:
+            print(string_port)
+            print("\nThis program must be run in root!!!!\n".upper())
+            quit()
 
-install()
+    install()
