@@ -496,10 +496,6 @@ class PortScanner:
         PortScanner.my_ip_address = host_ip[1][0]
         all_data = subprocess.run(["netdiscover", "-r", f"{host_ip[0]}/{host_ip[1][-1]}", "-P"], capture_output=True).stdout.decode()
 
-        all_arp_data = subprocess.run(["arp", "-a"], capture_output=True).stdout.decode().split("\n")[:-1]
-        pattern = r"\((\d+\.\d+\.\d+\.\d+)\)"
-        self.hostnames = {re.findall(pattern, each)[0]:each.split()[0] for each in all_arp_data if each.split()[0] != "?"}
-
         PortScanner.waiting = True
         time.sleep(0.6)
         PortScanner.waiting = False
@@ -507,6 +503,11 @@ class PortScanner:
 
         get_all_hostnames = {each.split()[0]: " ".join(each.split()[4:]) for each in all_data.split("\n") if
                              re.findall(r"\d+.\d+.\d+.\d+", each)}
+
+        for each_ip in get_all_hostnames.keys():
+            getting_hostname = subprocess.run(["host", each_ip], capture_output=True).stdout.decode()
+            if getting_hostname.split()[-1] != "3(NXDOMAIN)":
+                self.hostnames[each_ip] = getting_hostname.split()[-1]
 
         sorted_ips = [(ip, f"{host} (hostname: {self.hostnames[ip]})" if ip in self.hostnames else host) for each_number in order_ips for ip, host in get_all_hostnames.items() if
                       str(each_number) == ip.split(".")[-1]]
@@ -531,7 +532,7 @@ class PortScanner:
 
                 iphone.settimeout(0.5)
                 iphone.connect((every_ip[0], 62078))
-                ip_name = "Apple Device"
+                ip_name = "Apple Device" if "(" not in every_ip[1] else f"Apple Device ({every_ip[1].split('(')[1]}"
             except:
                 pass
 
