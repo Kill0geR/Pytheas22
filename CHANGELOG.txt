@@ -37,3 +37,32 @@ Change Log
 --------------------
 - New Printing Modell
 - New Python_Port_Scanner.py Script
+
+0.0.7 (12/12/2023)
+--------------------
+- IPv6 port scanning
+- new terminal look
+- Getting the exact location of the target's IP
+
+0.0.7.1 (15/12/2023)
+--------------------
+- Download fix
+
+0.0.7.2 (15/12/2023)
+--------------------
+- Error fix
+
+0.0.8 (16/12/2023)
+--------------------
+- New Portscanning Model in Linux
+- New Hostname features in Linux
+- Port scanning error fixed in Linux
+
+0.0.9 (18/12/2023)
+--------------------
+- Network scan fix
+
+0.1.0 (26/06/2025)
+--------------------
+- Internal Network Scan Fix
+- More Network to choose from

@@ -10,7 +10,7 @@ classifiers = [
 
 setup(
     name='Pytheas22',
-    version='0.0.6',
+    version='0.1.0',
     description='Pytheas22 is a Port Scanner which scans IP-Cameras, internal networks and individual hosts. If the port 22 is open it will try to login to that host via bruteforce',
     long_description_content_type="text/markdown",
     long_description=open('README.md').read() + '\n\n' + open('CHANGELOG.txt').read(),

@@ -150,19 +150,35 @@ class PortScanner:
 
     @classmethod
     def get_ip(cls):
-        open_ports = subprocess.run(["ip", "a"], capture_output=True)
-        everything = str(open_ports).split()
-        ipaddress = [everything[ip + 1] for ip, inet in enumerate(everything) if inet == "inet"]
+        print()
+        all_cmd = subprocess.run(["ip", "a"], capture_output=True).stdout.decode().split()
 
-        for each_ip in ipaddress:
-            real_ip = each_ip.split("/")
-            if real_ip[0] != "127.0.0.1":
-                cls.ip_subnett.append((real_ip[0], real_ip[1]))
+        all_ips = [cls.ip_subnett.append((all_cmd[idx + 1].split("/")[0], all_cmd[idx + 1].split("/")[1])) if
+                   all_cmd[idx + 1].split("/")[0] != "127.0.0.1" else "" for idx, ip in enumerate(all_cmd) if
+                   ip == "inet"][1:]
 
-        host = cls.ip_subnett[0][0].split(".")
+
+        for idx, each in enumerate(cls.ip_subnett):
+            just_ip = each[0].split(".")
+            just_ip[-1] = "0"
+            just_ip = ".".join(just_ip)
+            bp.color(f"[{idx + 1}]        {just_ip}", PortScanner.random_color)
+
+        get_chosen_ip = bp.color("Which Network do you want to scan?: ",
+                                 PortScanner.random_color, False)
+
+        get_ip = int(input(get_chosen_ip))
+
+        host = cls.ip_subnett[get_ip-1][0].split(".")
         host[-1] = "0"
         host_ip = ".".join(host)
-        return host_ip, cls.ip_subnett
+        if get_ip > len(all_ips) or get_ip < 0:
+            bp.color("This is not in the list")
+
+        else:
+            return host_ip, cls.ip_subnett[get_ip-1]
+
+
 
     def counter(self, country):
         res = requests.get(
@@ -416,10 +432,10 @@ class PortScanner:
             print("SORRY THIS ONLY WORKS ON LINUX. YOU CAN USE A VIRTUAL MACHINE TO RUN THIS")
             sys.exit()
         else:
-            spoof_addr_question = bp.color("Do you want to spoof an own address or someone from your network? y/n: ",
+            spoof_addr_question = bp.color("Do you want to spoof an own address or someone from your network? n (network) / o (own Address): ",
                                    PortScanner.random_color, False)
             spoof_addr = input(spoof_addr_question)
-            if spoof_addr == "y":
+            if spoof_addr == "o":
                 target_address_question = bp.color("Enter the target Address: ",
                                       PortScanner.random_color, False)
                 target_address = input(target_address_question)
@@ -430,7 +446,7 @@ class PortScanner:
 
                 spoof = PortScanner()
                 spoof.__spoof_ip(gateway_address, target_address)
-            else:
+            elif spoof_addr == "n":
                 self.linux_lst()
                 self.print_internal()
 
@@ -469,26 +485,106 @@ class PortScanner:
                         print("PLEASE WRITE A NUMBER THAT IS ABOVE YOU")
                         continue
 
-    @staticmethod
-    def linux_lst():
+            else:
+                print("THIS IST NOT WHAT HAS BEEN ASKED!")
+
+
+    def linux_lst(self):
+        host_ip = PortScanner.get_ip()
         threading_wait = threading.Thread(target=PortScanner.wait)
         threading_wait.start()
-        host_ip = PortScanner.get_ip()
-        PortScanner.my_ip_address = host_ip[1][0][0]
-        all_data = subprocess.run(["netdiscover", "-r", f"{host_ip[0]}/{host_ip[1][0][1]}", "-P"], capture_output=True).stdout.decode()
+        PortScanner.my_ip_address = host_ip[1][0]
+        all_data = subprocess.run(["netdiscover", "-r", f"{host_ip[0]}/{host_ip[1][-1]}", "-P"], capture_output=True).stdout.decode()
+
         PortScanner.waiting = True
         time.sleep(0.6)
         PortScanner.waiting = False
-        order_ips = sorted([int(each.split()[0].split(".")[-1]) for each in all_data.split("\n") if re.findall(r"\d+.\d+.\d+.\d+", each)] + [int(str(PortScanner.my_ip_address).split(".")[-1])])
+        order_ips = sorted([int(each.split()[0].split(".")[-1]) for each in all_data.split("\n") if re.findall(r"\d+.\d+.\d+.\d+", each)])
 
         get_all_hostnames = {each.split()[0]: " ".join(each.split()[4:]) for each in all_data.split("\n") if
                              re.findall(r"\d+.\d+.\d+.\d+", each)}
 
-        get_all_hostnames[PortScanner.my_ip_address] = "MY IP-ADDRESS"
-        sorted_ips = [(ip, host) for each_number in order_ips for ip, host in get_all_hostnames.items() if
+        for each_ip in get_all_hostnames.keys():
+            getting_hostname = subprocess.run(["host", each_ip], capture_output=True).stdout.decode()
+            if getting_hostname.split()[-1] != "3(NXDOMAIN)":
+                self.hostnames[each_ip] = getting_hostname.split()[-1]
+
+        sorted_ips = [(ip, f"{host} (hostname: {self.hostnames[ip]})" if ip in self.hostnames else host) for each_number in order_ips for ip, host in get_all_hostnames.items() if
                       str(each_number) == ip.split(".")[-1]]
 
-        PortScanner.every_ip_with_name = sorted_ips
+        sorted_ips.insert(0, (PortScanner.my_ip_address, "MY IP-ADDRESS"))
+
+        return sorted_ips
+
+    def get_every_ip(self, operating_system="windows"):
+        if operating_system == "windows":
+            all_my_ips = []
+            cmd = subprocess.run(["ipconfig", "/all"], capture_output=True)
+            split_cmd = str(cmd).split()
+
+            klammer = r"\d+.\d+.\d+.\d+"
+            get_all = re.findall(klammer, str(cmd))
+            data = [every for every in split_cmd if "(" in every]
+
+            all_ips = [each for each in get_all for every_data in data if each in every_data]
+            valid_ip = []
+            for every_ip in all_ips:
+                try:
+                    ipaddress.ip_address(every_ip)
+                    network_ip = ".".join(every_ip.split(".")[:3]) + ".0"
+                    if every_ip.split(".")[-1] not in ["255"] and network_ip not in valid_ip:
+                        valid_ip.append(network_ip)
+                        all_my_ips.append(every_ip)
+
+                except Exception as e:
+                    continue
+
+            PortScanner.every_ip_with_name = []
+            for every_valid_ip in valid_ip:
+                user_ip = \
+                [each_ip for each_ip in all_my_ips if each_ip.split(".")[:3] == every_valid_ip.split(".")[:3]][0]
+
+                PortScanner.every_ip_with_name.extend(self.internal_windows(user_ip))
+
+            return PortScanner.every_ip_with_name
+
+        else:
+            all_cmd = subprocess.run(["ip", "a"], capture_output=True).stdout.decode().split()
+            valid_ips = []
+
+            every_ip = [valid_ips.append((all_cmd[idx + 1].split("/")[0], all_cmd[idx + 1].split("/")[1])) if
+                       all_cmd[idx + 1].split("/")[0] != "127.0.0.1" else "" for idx, ip in enumerate(all_cmd) if
+                       ip == "inet"][1:]
+
+            PortScanner.every_ip_with_name = []
+            for valid_ip in valid_ips:
+                if valid_ip[1] == "16":
+                    break
+                PortScanner.my_ip_address = valid_ip[0]
+                all_data = subprocess.run(["netdiscover", "-r", f"{valid_ip[0]}/{valid_ip[1]}", "-P"],
+                                          capture_output=True).stdout.decode()
+
+                order_ips = sorted([int(each.split()[0].split(".")[-1]) for each in all_data.split("\n") if
+                                    re.findall(r"\d+.\d+.\d+.\d+", each)])
+
+                get_all_hostnames = {each.split()[0]: " ".join(each.split()[4:]) for each in all_data.split("\n") if
+                                     re.findall(r"\d+.\d+.\d+.\d+", each)}
+
+                for each_ip in get_all_hostnames.keys():
+                    getting_hostname = subprocess.run(["host", each_ip], capture_output=True).stdout.decode()
+                    if getting_hostname.split()[-1] != "3(NXDOMAIN)":
+                        self.hostnames[each_ip] = getting_hostname.split()[-1]
+
+                sorted_ips = [(ip, f"{host} (hostname: {self.hostnames[ip]})" if ip in self.hostnames else host) for
+                              each_number
+                              in order_ips for ip, host in get_all_hostnames.items() if
+                              str(each_number) == ip.split(".")[-1]]
+
+                sorted_ips.insert(0, (PortScanner.my_ip_address, "MY IP-ADDRESS"))
+                PortScanner.every_ip_with_name.extend(sorted_ips)
+
+            return PortScanner.every_ip_with_name
+
 
     @staticmethod
     def print_internal():
@@ -506,7 +602,7 @@ class PortScanner:
 
                 iphone.settimeout(0.5)
                 iphone.connect((every_ip[0], 62078))
-                ip_name = "Apple Device"
+                ip_name = "Apple Device" if "(" not in every_ip[1] else f"Apple Device ({every_ip[1].split('(')[1]}"
             except:
                 pass
 
@@ -561,7 +657,7 @@ class PortScanner:
         bp.color("ALL THE DEVICES IN YOUR NETWORK WILL BE SHOWN SOON", PortScanner.random_color)
         if sys.platform == "linux":
             get_lst = PortScanner()
-            get_lst.linux_lst()
+            PortScanner.every_ip_with_name = get_lst.linux_lst()
 
         elif sys.platform == "win32" or sys.platform == "windows" or sys.platform == "win64":
             windows = PortScanner()
