@@ -8,6 +8,8 @@ def install():
     time.sleep(1)
     print("pip install Pytheas22")
     os.system("pip install Pytheas22")
+    print("pip install requests")
+    os.system("pip install requests")
 
     if sys.platform == "linux":
         print("sudo apt install netdiscover")
