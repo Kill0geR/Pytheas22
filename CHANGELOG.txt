@@ -66,3 +66,8 @@ Change Log
 --------------------
 - Internal Network Scan Fix
 - More Network to choose from
+
+0.2.0 (06/03/2026)
+--------------------
+- All IP-Addresses can now be returned via one function
+- Better install requires
