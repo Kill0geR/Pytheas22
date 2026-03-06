@@ -715,6 +715,29 @@ class PortScanner:
                 continue
         return this_ip
 
+    # This returns all the devices from the chosen network
+    @staticmethod
+    def get_all_ips_network():
+        bp.color("ALL THE DEVICES IN YOUR NETWORK WILL BE SHOWN SOON", PortScanner.random_color)
+        if sys.platform == "linux":
+            get_lst = PortScanner()
+            PortScanner.every_ip_with_name = get_lst.linux_lst()
+
+        elif sys.platform == "win32" or sys.platform == "windows" or sys.platform == "win64":
+            windows = PortScanner()
+            get_ip, my_ips = windows.get_user_ip()
+            user_ip = [each_ip for each_ip in my_ips if each_ip.split(".")[:3] == get_ip.split(".")[:3]][0]
+
+            win_threading_wait = threading.Thread(target=PortScanner.wait)
+            win_threading_wait.start()
+            PortScanner.every_ip_with_name = windows.internal_windows(user_ip)
+            time.sleep(0.5)
+            PortScanner.waiting = True
+            time.sleep(0.5)
+            PortScanner.waiting = False
+
+        return PortScanner.every_ip_with_name
+
     # David Bombal's Code big thanks to him
     def __ssh_connect(self, host, username, password):
         ssh_client = SSHClient()
