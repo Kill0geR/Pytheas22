@@ -304,6 +304,15 @@ class PortScanner:
             os._exit(0)
 
 
+    def mac_pinging(self, ip):
+        try:
+            subprocess.run(["ping", "-c", "1", "-W", "1000", ip], capture_output=True)
+
+        except:
+            print("THANK YOU FOR USING PYTHEAS22")
+            os._exit(0)
+
+
     def get_user_ip(self):
         all_my_ips = []
         cmd = subprocess.run(["ipconfig", "/all"], capture_output=True)
@@ -336,6 +345,30 @@ class PortScanner:
         else:
             return valid_ip[get_ip-1], all_my_ips
 
+    def get_mac_ips(self):
+        all_ips = subprocess.run(['ifconfig | grep -E "inet |netmask "'], capture_output=True, shell=True,
+                                 text=True).stdout
+
+        find_all_ips = re.findall(r'\d+\.\d+\.\d+\.\d+', all_ips)
+
+        all_networks = [
+            (f'{".".join(ip.split(".")[:3])}.0', ip) for ip in find_all_ips
+            if ip != '127.0.0.1'
+               and not ip.endswith('.255')
+        ]
+
+        all_my_ips = [each_ip[-1] for each_ip in all_networks]
+
+        for idx, each in enumerate(all_networks):
+            bp.color(f"[{idx + 1}]        {each[0]}", PortScanner.random_color)
+
+        get_chosen_ip = bp.color("Which Network do you want to scan?: ",
+                                 PortScanner.random_color, False)
+
+        get_ip = int(input(get_chosen_ip))
+
+        return all_networks[get_ip - 1][0], all_my_ips
+
     def internal_windows(self, user_ip):
         PortScanner.my_ip_address = user_ip
         getlast = PortScanner.my_ip_address.split(".")
@@ -357,6 +390,26 @@ class PortScanner:
 
         get_mac = PortScanner()
         ip_name = [(ip, get_mac.get_name(ip, mac) if PortScanner.my_ip_address != ip else "MY IP-ADDRESS") for ip, mac in indexes]
+        return ip_name
+
+    def internal_mac(self, user_ip):
+        PortScanner.my_ip_address = user_ip
+        getlast = PortScanner.my_ip_address.split(".")
+        spalten = [f"{'.'.join(getlast[0:3])}.{block_number}" for block_number in range(1, 255)]
+        for all_ip in spalten:
+            t = threading.Thread(target=PortScanner.mac_pinging, args=(PortScanner, all_ip,))
+            t.start()
+        time.sleep(1)
+
+
+        arp = subprocess.run(["arp", "-a"], capture_output=True).stdout.decode().splitlines()
+
+        self.hostnames = {line.split()[1].strip("()"): line.split()[0] for line in arp if line.split()[0] != "?"}
+
+        get_mac = PortScanner()
+        ip_name = [(line.split()[1].strip("()"), self.get_name(line.split()[1].strip("()"), line.split()[3])) for line in arp if line.split()[3] != "(incomplete)" and line.split()[1].strip("()")[:3] == user_ip[:3]]
+
+        ip_name.insert(0, (user_ip, "MY IP-ADDRESS"))
         return ip_name
 
     @staticmethod
@@ -667,6 +720,20 @@ class PortScanner:
             win_threading_wait = threading.Thread(target=PortScanner.wait)
             win_threading_wait.start()
             PortScanner.every_ip_with_name = windows.internal_windows(user_ip)
+            time.sleep(0.5)
+            PortScanner.waiting = True
+            time.sleep(0.5)
+            PortScanner.waiting = False
+
+        elif sys.platform == "darwin":
+            mac = PortScanner()
+
+            get_ip, my_ips = mac.get_mac_ips()
+            user_ip = [each_ip for each_ip in my_ips if each_ip.split(".")[:3] == get_ip.split(".")[:3]][0]
+
+            mac_threading_wait = threading.Thread(target=PortScanner.wait)
+            mac_threading_wait.start()
+            PortScanner.every_ip_with_name = mac.internal_mac(user_ip)
             time.sleep(0.5)
             PortScanner.waiting = True
             time.sleep(0.5)
