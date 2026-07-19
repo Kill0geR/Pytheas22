@@ -349,12 +349,13 @@ class PortScanner:
         all_ips = subprocess.run(['ifconfig | grep -E "inet |netmask "'], capture_output=True, shell=True,
                                  text=True).stdout
 
+        split_all_ips = all_ips.split()
         find_all_ips = re.findall(r'\d+\.\d+\.\d+\.\d+', all_ips)
 
         all_networks = [
             (f'{".".join(ip.split(".")[:3])}.0', ip) for ip in find_all_ips
             if ip != '127.0.0.1'
-               and not ip.endswith('.255')
+               and split_all_ips[split_all_ips.index(ip)-1] != "broadcast"
         ]
 
         all_my_ips = [each_ip[-1] for each_ip in all_networks]
@@ -729,7 +730,9 @@ class PortScanner:
             mac = PortScanner()
 
             get_ip, my_ips = mac.get_mac_ips()
+            print(get_ip, my_ips)
             user_ip = [each_ip for each_ip in my_ips if each_ip.split(".")[:3] == get_ip.split(".")[:3]][0]
+            print(f"User IP : {user_ip}")
 
             mac_threading_wait = threading.Thread(target=PortScanner.wait)
             mac_threading_wait.start()
