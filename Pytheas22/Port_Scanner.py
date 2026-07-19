@@ -730,9 +730,7 @@ class PortScanner:
             mac = PortScanner()
 
             get_ip, my_ips = mac.get_mac_ips()
-            print(get_ip, my_ips)
             user_ip = [each_ip for each_ip in my_ips if each_ip.split(".")[:3] == get_ip.split(".")[:3]][0]
-            print(f"User IP : {user_ip}")
 
             mac_threading_wait = threading.Thread(target=PortScanner.wait)
             mac_threading_wait.start()
