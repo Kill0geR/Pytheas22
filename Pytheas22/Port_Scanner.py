@@ -898,39 +898,42 @@ class PortScanner:
         except OSError:
             pass
 
-    def get_location_of_ip(self, ip):
-        self.ip = ip
+    @staticmethod
+    def get_location_of_ip(ip):
+        check_ip = ipaddress.ip_address(ip)
+        if check_ip.is_global:
 
-        if "." in self.ip or ":" in self.ip:
-            if "." in self.ip: url = f"https://www.geolocation.com/de?ip={self.ip}#ipresult"
-            else:
-                new_url = '%20'.join(self.ip.split(":"))
-                url = f"https://www.geolocation.com/de?ip={new_url}#ipresult"
+            if "." in ip or ":" in ip:
+                if "." in ip: url = f"https://www.geolocation.com/de?ip={ip}#ipresult"
+                else:
+                    new_url = '%20'.join(ip.split(":"))
+                    url = f"https://www.geolocation.com/de?ip={new_url}#ipresult"
 
-            if len(self.ip.split(".")) == 4 or len(self.ip.split(":")) > 5:
-                print("\nGetting the potential location of the address")
-                data = requests.get(url).text.replace(r"\\t", "").replace(r"\\r", "").split()
+                if len(ip.split(".")) == 4 or len(ip.split(":")) > 5:
+                    print("\nGetting the potential location of the address")
+                    data = requests.get(url).text.replace(r"\\t", "").replace(r"\\r", "").split()
 
-                relevant_data = [f"<div><label><strong>{each_data}</strong></label></div>" for each_data in
-                                 ["Land", "Region", "Stadt", "Postleitzahl", "ISP", "Domänenname"]]
-                get_relevant_data = [data.index(rel) for rel in relevant_data if rel in data]
-                information = []
-                for idx in get_relevant_data:
-                    this_lst = []
-                    for every in data[idx + 1:]:
-                        if "</td>" in every:
-                            break
-                        this_lst.append(every)
-                    info = " ".join(this_lst)
-                    for every_item in ["<img", "[", "<a"]:
-                        info = info.split(every_item)[0]
+                    relevant_data = [f"<div><label><strong>{each_data}</strong></label></div>" for each_data in
+                                     ["Land", "Region", "Stadt", "Postleitzahl", "ISP", "Domänenname"]]
+                    get_relevant_data = [data.index(rel) for rel in relevant_data if rel in data]
+                    information = []
+                    for idx in get_relevant_data:
+                        this_lst = []
+                        for every in data[idx + 1:]:
+                            if "</td>" in every:
+                                break
+                            this_lst.append(every)
+                        info = " ".join(this_lst)
+                        for every_item in ["<img", "[", "<a"]:
+                            info = info.split(every_item)[0]
 
-                    information.append(info.strip())
-                return (f"\n\nTHE IP IS FROM {information[0]}\n\n"
-                        f"REGION: {information[1]}\nCITY: {information[2]}\n"
-                        f"POSTCODE: {information[3]}\nISP (Internet Service Provider): {information[4]}\n"
-                        f"Domain: {information[5]}\n")
-        return "\n\nNo location found\n\n"
+                        information.append(info.strip())
+                    return (f"\n\nTHE IP IS FROM {information[0]}\n\n"
+                            f"REGION: {information[1]}\nCITY: {information[2]}\n"
+                            f"POSTCODE: {information[3]}\nISP (Internet Service Provider): {information[4]}\n"
+                            f"Domain: {information[5]}\n")
+            return "\n\nNo location found\n\n"
+        return ""
 
     @staticmethod
     def print_func():
